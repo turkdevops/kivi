@@ -35,7 +35,7 @@
         "vue": "^2.6.11",
         "vue-virtual-scroller": "^1.0.4",
         "whatwg-fetch": "^3.0.0",
-        "xhr": "^2.5.0"
+        "xhr": "^2.6.0"
     },
     "devDependencies": {
         "@vue/cli-plugin-babel": "~4.3.1",
