@@ -1,13 +1,13 @@
-'kiwi public';
+"kiwi public";
 
-import _ from 'lodash';
-import strftime from 'strftime';
-import Irc from 'irc-framework';
-import * as TextFormatting from '@/helpers/TextFormatting';
-import * as IrcdDiffs from '@/helpers/IrcdDiffs';
-import typingMiddleware from './TypingMiddleware';
-import chathistoryMiddleware from './ChathistoryMiddleware';
-import * as ServerConnection from './ServerConnection';
+import _ from "lodash";
+import strftime from "strftime";
+import Irc from "irc-framework";
+import * as TextFormatting from "@/helpers/TextFormatting";
+import * as IrcdDiffs from "@/helpers/IrcdDiffs";
+import typingMiddleware from "./TypingMiddleware";
+import chathistoryMiddleware from "./ChathistoryMiddleware";
+import * as ServerConnection from "./ServerConnection";
 
 export function create(state, network) {
     let networkid = network.id;
@@ -24,7 +24,7 @@ export function create(state, network) {
         },
         nick: network.connection.nick,
         username: network.username || network.connection.nick,
-        gecos: network.gecos || 'https://kiwiirc.com/',
+        gecos: network.gecos || "https://kiwiirc.com/",
         version: null,
         auto_reconnect: false,
         encoding: network.connection.encoding,
@@ -32,10 +32,10 @@ export function create(state, network) {
     };
 
     let ircClient = new Irc.Client(clientOpts);
-    ircClient.requestCap('znc.in/self-message');
+    ircClient.requestCap("znc.in/self-message");
     // Current version of irc-framework only support draft/message-tags-0.2
     // TODO: Removee this once irc-framework has been updated
-    ircClient.requestCap('message-tags');
+    ircClient.requestCap("message-tags");
     ircClient.use(chathistoryMiddleware());
     ircClient.use(clientMiddleware(state, network));
     ircClient.use(typingMiddleware());
@@ -46,7 +46,7 @@ export function create(state, network) {
     ircClient.connect = function connect(...args) {
         // Set some defaults if we don't have eveything
         if (!network.connection.nick) {
-            network.connection.nick = 'Guest' + Math.floor(Math.random() * 100);
+            network.connection.nick = "Guest" + Math.floor(Math.random() * 100);
         }
 
         ircClient.options.host = network.connection.server;
@@ -60,36 +60,37 @@ export function create(state, network) {
                 password: network.password,
             };
         } else {
-            // No password so give an empty account config. This forces irc-framework to keep
-            // the server password (options.password) separate from SASL
-            ircClient.options.account = { };
+            // No password so give an empty account config. This forces irc-framework
+            // to keep the server password (options.password) separate from SASL
+            ircClient.options.account = {};
         }
         ircClient.options.nick = network.connection.nick;
-        ircClient.options.username = network.username || network.connection.nick;
-        ircClient.options.gecos = network.gecos || 'https://kiwiirc.com/';
+        ircClient.options.username =
+            network.username || network.connection.nick;
+        ircClient.options.gecos = network.gecos || "https://kiwiirc.com/";
         ircClient.options.encoding = network.connection.encoding;
-        ircClient.options.auto_reconnect = !!state.setting('autoReconnect');
+        ircClient.options.auto_reconnect = !!state.setting("autoReconnect");
 
         // Apply any irc-fw options specified in kiwiirc config
-        let configOptions = state.setting('ircFramework');
+        let configOptions = state.setting("ircFramework");
         if (configOptions) {
             Object.assign(ircClient.options, configOptions);
         }
 
         let eventObj = { network, transport: null };
-        state.$emit('network.connecting', eventObj);
+        state.$emit("network.connecting", eventObj);
 
         if (eventObj.transport) {
             // A plugin might use its own transport of some kind
             ircClient.options.transport = eventObj.transport;
         } else if (!network.connection.direct) {
-            // A direct connection uses a websocket to connect (note: some browsers limit
-            // the number of connections to the same host!).
-            // A non-direct connection will connect via the configured kiwi server using
-            // with our own irc-framework compatible transport.
+            // A direct connection uses a websocket to connect (note: some browsers
+            // limit the number of connections to the same host!). A non-direct
+            // connection will connect via the configured kiwi server using with our
+            // own irc-framework compatible transport.
             ircClient.options.transport = ServerConnection.createChannelConstructor(
                 state.settings.kiwiServer,
-                (window.location.hash || '').substr(1),
+                (window.location.hash || "").substr(1),
                 networkid
             );
         } else {
@@ -100,7 +101,8 @@ export function create(state, network) {
         originalIrcClientConnect.apply(ircClient, args);
     };
 
-    // Overload the raw() function so that we can emit outgoing IRC messages to plugins
+    // Overload the raw() function so that we can emit outgoing IRC messages to
+    // plugins
     let originalIrcClientRaw = ircClient.raw;
     ircClient.raw = function raw(...args) {
         let message = null;
@@ -113,26 +115,26 @@ export function create(state, network) {
         }
 
         let eventObj = { network, message, handled: false };
-        state.$emit('ircout', eventObj);
+        state.$emit("ircout", eventObj);
         if (!eventObj.handled) {
             originalIrcClientRaw.apply(ircClient, [message]);
         }
     };
 
-    ircClient.on('raw', (event) => {
-        if (!network.setting('show_raw') && !state.setting('showRaw')) {
+    ircClient.on("raw", (event) => {
+        if (!network.setting("show_raw") && !state.setting("showRaw")) {
             return;
         }
 
-        let buffer = state.getOrAddBufferByName(networkid, '*raw');
+        let buffer = state.getOrAddBufferByName(networkid, "*raw");
         state.addMessage(buffer, {
             time: Date.now(),
-            nick: '',
-            message: (event.from_server ? '[S] ' : '[C] ') + event.line,
+            nick: "",
+            message: (event.from_server ? "[S] " : "[C] ") + event.line,
         });
     });
 
-    ircClient.on('typing', (event) => {
+    ircClient.on("typing", (event) => {
         let user = state.getUser(network.id, event.nick);
         if (user) {
             user.typingStatus(event.target, event.status);
@@ -152,40 +154,43 @@ function clientMiddleware(state, network) {
         parsedEvents.use(parsedEventsHandler);
         rawEvents.use(rawEventsHandler);
 
-        client.on('connecting', () => {
-            network.state_error = '';
-            network.state = 'connecting';
-            network.last_error = '';
+        client.on("connecting", () => {
+            network.state_error = "";
+            network.state = "connecting";
+            network.last_error = "";
             network.last_error_numeric = 0;
         });
 
-        client.on('connected', () => {
-            network.state_error = '';
-            network.state = 'connected';
+        client.on("connected", () => {
+            network.state_error = "";
+            network.state = "connected";
 
             network.buffers.forEach((buffer) => {
                 if (!buffer) {
                     return;
                 }
 
-                let messageBody = TextFormatting.formatText('network_connected', {
-                    text: TextFormatting.t('connected'),
-                });
+                let messageBody = TextFormatting.formatText(
+                    "network_connected",
+                    {
+                        text: TextFormatting.t("connected"),
+                    }
+                );
 
                 state.addMessage(buffer, {
                     time: Date.now(),
-                    nick: '',
+                    nick: "",
                     message: messageBody,
-                    type: 'connection',
-                    type_extra: 'connected',
+                    type: "connection",
+                    type_extra: "connected",
                 });
             });
         });
 
-        client.on('socket close', (err) => {
+        client.on("socket close", (err) => {
             isRegistered = false;
-            network.state = 'disconnected';
-            network.state_error = err || '';
+            network.state = "disconnected";
+            network.state_error = err || "";
 
             network.buffers.forEach((buffer) => {
                 if (!buffer) {
@@ -195,16 +200,19 @@ function clientMiddleware(state, network) {
                 buffer.joined = false;
                 buffer.clearUsers();
 
-                let messageBody = TextFormatting.formatText('network_disconnected', {
-                    text: TextFormatting.t('disconnected'),
-                });
+                let messageBody = TextFormatting.formatText(
+                    "network_disconnected",
+                    {
+                        text: TextFormatting.t("disconnected"),
+                    }
+                );
 
                 state.addMessage(buffer, {
                     time: Date.now(),
-                    nick: '',
+                    nick: "",
                     message: messageBody,
-                    type: 'connection',
-                    type_extra: 'disconnected',
+                    type: "connection",
+                    type_extra: "disconnected",
                 });
             });
         });
@@ -213,51 +221,49 @@ function clientMiddleware(state, network) {
     function rawEventsHandler(command, event, rawLine, client, next) {
         // Allow plugins to override raw IRC events
         let eventObj = { ...event, raw: rawLine, handled: false };
-        state.$emit('irc.raw', command, eventObj, network);
+        state.$emit("irc.raw", command, eventObj, network);
         if (eventObj.handled) {
             return;
         }
 
-        state.$emit('irc.raw.' + command, command, eventObj, network);
+        state.$emit("irc.raw." + command, command, eventObj, network);
         if (eventObj.handled) {
             return;
         }
 
-        if (command === '002') {
+        if (command === "002") {
             // Your host is server.example.net, running version InspIRCd-2.0
-            let param = event.params[1] || '';
+            let param = event.params[1] || "";
             let m = param.match(/running version (.*)$/);
-            network.ircd = m ?
-                m[1] :
-                '';
+            network.ircd = m ? m[1] : "";
         }
 
         // SASL failed auth
-        if (command === '904') {
-            if (state.setting('disconnectOnSaslFail')) {
+        if (command === "904") {
+            if (state.setting("disconnectOnSaslFail")) {
                 network.ircClient.connection.end();
-                network.last_error = 'Invalid login';
+                network.last_error = "Invalid login";
             }
 
             let serverBuffer = network.serverBuffer();
             state.addMessage(serverBuffer, {
                 time: Date.now(),
-                nick: '*',
-                message: 'Invalid login',
+                nick: "*",
+                message: "Invalid login",
             });
         }
 
-        if (command === 'CAP' && network.setting('show_raw_caps')) {
+        if (command === "CAP" && network.setting("show_raw_caps")) {
             let params = [...event.params];
-            if (params[params.length - 1].indexOf(' ') > -1) {
-                params[params.length - 1] = ':' + params[params.length - 1];
+            if (params[params.length - 1].indexOf(" ") > -1) {
+                params[params.length - 1] = ":" + params[params.length - 1];
             }
 
             let buffer = network.serverBuffer();
             state.addMessage(buffer, {
                 time: Date.now(),
-                nick: '',
-                message: event.command + ' ' + params.join(' '),
+                nick: "",
+                message: event.command + " " + params.join(" "),
             });
         }
 
@@ -268,55 +274,66 @@ function clientMiddleware(state, network) {
         // Trigger this event through the state object first. If it's been handled
         // somewhere else then we ignore it.
         let ircEventObj = { handled: false };
-        state.$emit('irc.' + command, event, network, ircEventObj);
+        state.$emit("irc." + command, event, network, ircEventObj);
         if (ircEventObj.handled) {
             next();
             return;
         }
 
-        // Ignore any of the control messages. They're transport related to kiwi internals
-        if (event && event.command === 'CONTROL') {
+        // Ignore any of the control messages. They're transport related to kiwi
+        // internals
+        if (event && event.command === "CONTROL") {
             next();
             return;
         }
 
-        // If there is a time difference between this client and the server, convert it
-        // to match our local time so it makes sense to the user
-        let eventTime = (event && event.time) ?
-            network.ircClient.network.timeToLocal(event.time) :
-            Date.now();
+        // If there is a time difference between this client and the server, convert
+        // it to match our local time so it makes sense to the user
+        let eventTime =
+            event && event.time
+                ? network.ircClient.network.timeToLocal(event.time)
+                : Date.now();
         let serverTime = (event && event.time) || 0;
 
-        if (command === 'channel_redirect') {
+        if (command === "channel_redirect") {
             let b = network.bufferByName(event.from);
             if (b) {
                 b.flags.redirect_to = event.to;
             }
         }
 
-        if (command === 'registered') {
+        if (command === "registered") {
             isRegistered = true;
             network.nick = event.nick;
-            state.addUser(networkid, { nick: event.nick, username: client.user.username });
+            state.addUser(networkid, {
+                nick: event.nick,
+                username: client.user.username,
+            });
 
             let serverBuffer = network.serverBuffer();
             state.addMessage(serverBuffer, {
                 time: Date.now(),
-                nick: '',
-                message: TextFormatting.t('connected_to', { network: client.network.name }),
+                nick: "",
+                message: TextFormatting.t("connected_to", {
+                    network: client.network.name,
+                }),
             });
 
             // Get some extra info about ourselves
-            client.raw('WHO ' + event.nick);
+            client.raw("WHO " + event.nick);
 
             if (network.auto_commands) {
-                network.auto_commands.split('\n').forEach((line) => {
-                    state.$emit('input.raw', line[0] === '/' ? line : `/${line}`);
+                network.auto_commands.split("\n").forEach((line) => {
+                    state.$emit(
+                        "input.raw",
+                        line[0] === "/" ? line : `/${line}`
+                    );
                 });
             }
 
             // Join our channels
-            // If under bouncer mode, the bouncer will send the channels were joined to instead.
+            // If under bouncer mode, the bouncer will send the channels were joined
+            // to instead.
             if (!network.connection.bncnetid) {
                 network.buffers.forEach((buffer) => {
                     if (buffer.isChannel() && buffer.enabled) {
@@ -328,61 +345,67 @@ function clientMiddleware(state, network) {
             numConnects++;
         }
 
-        if (command === 'server options') {
-            // If the network name has changed from the irc-framework default, update ours
-            // Also if it isn't a BNC network as the name is then derived from the BNC info instead
-            if (client.network.name !== 'Network' && !network.connection.bncnetid) {
+        if (command === "server options") {
+            // If the network name has changed from the irc-framework default, update
+            // ours Also if it isn't a BNC network as the name is then derived from
+            // the BNC info instead
+            if (
+                client.network.name !== "Network" &&
+                !network.connection.bncnetid
+            ) {
                 network.name = client.network.name;
             }
         }
 
         // Show unhandled data from the server in the servers tab
-        if (command === 'unknown command') {
-            if (event.command === '486') {
+        if (command === "unknown command") {
+            if (event.command === "486") {
                 // You must log in with services to message this user
                 let targetNick = event.params[1];
                 let buffer = state.getOrAddBufferByName(network.id, targetNick);
                 state.addMessage(buffer, {
                     time: Date.now(),
-                    nick: '*',
+                    nick: "*",
                     message: event.params[2],
-                    type: 'error',
+                    type: "error",
                 });
             } else {
                 let buffer = network.serverBuffer();
-                let message = '';
+                let message = "";
 
                 // Only show non-numeric commands
                 if (!event.command.match(/^\d+$/)) {
-                    message += event.command + ' ';
+                    message += event.command + " ";
                 }
 
-                let containsNick = event.params[0] === network.ircClient.user.nick;
+                let containsNick =
+                    event.params[0] === network.ircClient.user.nick;
                 let isChannelMessage = network.isChannelName(event.params[1]);
 
-                // Strip out the nick if it's the first params (many commands include this)
+                // Strip out the nick if it's the first params (many commands include
+                // this)
                 if (containsNick && isChannelMessage) {
                     let channelBuffer = network.bufferByName(event.params[1]);
                     if (channelBuffer) {
                         buffer = channelBuffer;
                     }
-                    message += event.params.slice(2).join(', ');
+                    message += event.params.slice(2).join(", ");
                 } else if (containsNick) {
-                    message += event.params.slice(1).join(', ');
+                    message += event.params.slice(1).join(", ");
                 } else {
-                    message += event.params.join(', ');
+                    message += event.params.join(", ");
                 }
 
                 state.addMessage(buffer, {
-                    nick: '',
+                    nick: "",
                     message: message,
                 });
             }
         }
 
-        if (command === 'message') {
+        if (command === "message") {
             let isPrivateMessage = false;
-            let bufferName = event.from_server ? '*' : event.target;
+            let bufferName = event.from_server ? "*" : event.target;
 
             // PMs should go to a buffer with the name of the other user
             if (!event.from_server && event.target === client.user.nick) {
@@ -390,32 +413,40 @@ function clientMiddleware(state, network) {
                 bufferName = event.nick;
             }
 
-            // Chanserv sometimes PMs messages about a channel on join in the format of
+            // Chanserv sometimes PMs messages about a channel on join in the format
+            // of
             // [#channel] welcome!
             // Redirect these to #channel
             if (
-                event.nick.toLowerCase() === 'chanserv' &&
+                event.nick.toLowerCase() === "chanserv" &&
                 isPrivateMessage &&
-                event.message[0] === '['
+                event.message[0] === "["
             ) {
-                bufferName = event.message.substr(1, event.message.indexOf(']') - 1);
+                bufferName = event.message.substr(
+                    1,
+                    event.message.indexOf("]") - 1
+                );
             }
 
-            // Notices from somewhere when we don't have an existing buffer for them should go into
-            // the server tab. ie. notices from servers
-            if (event.type === 'notice') {
-                let existingBuffer = state.getBufferByName(networkid, bufferName);
-                let noticeActiveBuffer = state.setting('noticeActiveBuffer');
+            // Notices from somewhere when we don't have an existing buffer for them
+            // should go into the server tab. ie. notices from servers
+            if (event.type === "notice") {
+                let existingBuffer = state.getBufferByName(
+                    networkid,
+                    bufferName
+                );
+                let noticeActiveBuffer = state.setting("noticeActiveBuffer");
                 let activeBuffer = state.getActiveBuffer();
-                let hasActiveBuffer = activeBuffer && activeBuffer.networkid === networkid;
+                let hasActiveBuffer =
+                    activeBuffer && activeBuffer.networkid === networkid;
 
-                // If we don't have a buffer for this notice sender, either show it in our active
-                // buffer or the server buffer
+                // If we don't have a buffer for this notice sender, either show it in
+                // our active buffer or the server buffer
                 if (!existingBuffer) {
                     if (noticeActiveBuffer && hasActiveBuffer) {
                         bufferName = activeBuffer.name;
                     } else {
-                        bufferName = '*';
+                        bufferName = "*";
                     }
                 }
             }
@@ -425,14 +456,14 @@ function clientMiddleware(state, network) {
             const PM_BLOCK_REQUIRES_CHECK = null;
 
             let pmBlock = network.isNickExemptFromPmBlocks(event.nick);
-            let blockNewPms = state.setting('buffers.block_pms');
+            let blockNewPms = state.setting("buffers.block_pms");
             let buffer = state.getBufferByName(networkid, bufferName);
 
-            let textFormatType = 'privmsg';
-            if (event.type === 'action') {
-                textFormatType = 'action';
-            } else if (event.type === 'notice') {
-                textFormatType = 'notice';
+            let textFormatType = "privmsg";
+            if (event.type === "action") {
+                textFormatType = "action";
+            } else if (event.type === "notice") {
+                textFormatType = "notice";
             }
 
             let messageBody = TextFormatting.formatText(textFormatType, {
@@ -451,17 +482,30 @@ function clientMiddleware(state, network) {
                 tags: event.tags || {},
             };
 
-            // If this is a new PM and the sending user is not exempt from blocks, ignore it
-            if (blockNewPms && isPrivateMessage && !buffer && pmBlock === PM_BLOCK_BLOCKED) {
+            // If this is a new PM and the sending user is not exempt from blocks,
+            // ignore it
+            if (
+                blockNewPms &&
+                isPrivateMessage &&
+                !buffer &&
+                pmBlock === PM_BLOCK_BLOCKED
+            ) {
                 return;
             }
 
             // If we need to manually check if this user is blocked..
-            // PM_BLOCK_REQUIRES_CHECK means we should whois the user to get their oper status. We
-            // allways allow messages from opers.
-            if (blockNewPms && isPrivateMessage && !buffer && pmBlock === PM_BLOCK_REQUIRES_CHECK) {
+            // PM_BLOCK_REQUIRES_CHECK means we should whois the user to get their
+            // oper status. We allways allow messages from opers.
+            if (
+                blockNewPms &&
+                isPrivateMessage &&
+                !buffer &&
+                pmBlock === PM_BLOCK_REQUIRES_CHECK
+            ) {
                 // if the nick is in pendingPms it has already issued a whois request
-                let awaitingWhois = !!_.find(network.pendingPms, { nick: event.nick });
+                let awaitingWhois = !!_.find(network.pendingPms, {
+                    nick: event.nick,
+                });
                 network.pendingPms.push({ bufferName, message });
 
                 // Don't send another whois if we are already awaiting another
@@ -474,7 +518,10 @@ function clientMiddleware(state, network) {
                         let nickLower = pm.message.nick.toLowerCase();
                         if (nickLower === whoisData.nick.toLowerCase()) {
                             if (whoisData.operator) {
-                                buffer = state.getOrAddBufferByName(network.id, pm.bufferName);
+                                buffer = state.getOrAddBufferByName(
+                                    network.id,
+                                    pm.bufferName
+                                );
                                 state.addMessage(buffer, pm.message);
                             }
                             obj.splice(idx, 1);
@@ -492,9 +539,9 @@ function clientMiddleware(state, network) {
             state.addMessage(buffer, message);
         }
 
-        if (command === 'wallops') {
-            let buffer = state.getOrAddBufferByName(networkid, '*');
-            let messageBody = TextFormatting.formatText('wallops', {
+        if (command === "wallops") {
+            let buffer = state.getOrAddBufferByName(networkid, "*");
+            let messageBody = TextFormatting.formatText("wallops", {
                 text: event.message,
             });
 
@@ -503,17 +550,20 @@ function clientMiddleware(state, network) {
                 server_time: serverTime,
                 nick: event.nick,
                 message: messageBody,
-                type: 'wallops',
+                type: "wallops",
             });
         }
 
-        if (command === 'join') {
-            // If we have any buffers marked as being redirected to this new channel, update
-            // that buffer instead of creating a new one
+        if (command === "join") {
+            // If we have any buffers marked as being redirected to this new channel,
+            // update that buffer instead of creating a new one
             if (event.nick === client.user.nick) {
                 network.buffers.forEach((b) => {
-                    if ((b.flags.redirect_to || '').toLowerCase() === event.channel.toLowerCase()) {
-                        state.$delete(b.flags, 'redirect_to');
+                    if (
+                        (b.flags.redirect_to || "").toLowerCase() ===
+                        event.channel.toLowerCase()
+                    ) {
+                        state.$delete(b.flags, "redirect_to");
                         b.rename(event.channel);
                     }
                 });
@@ -521,7 +571,8 @@ function clientMiddleware(state, network) {
 
             let buffer = state.getOrAddBufferByName(networkid, event.channel);
 
-            // The case does not match, update buffer.name to the casing sent by the server
+            // The case does not match, update buffer.name to the casing sent by the
+            // server
             if (buffer.name !== event.channel) {
                 buffer.rename(event.channel);
             }
@@ -531,25 +582,25 @@ function clientMiddleware(state, network) {
                 username: event.ident,
                 host: event.hostname,
                 realname: event.gecos,
-                account: event.account || '',
+                account: event.account || "",
             });
 
             if (event.nick === client.user.nick) {
                 buffer.enabled = true;
                 buffer.joined = true;
                 buffer.flags.channel_badkey = false;
-                network.ircClient.raw('MODE', event.channel);
+                network.ircClient.raw("MODE", event.channel);
                 network.ircClient.who(event.channel);
             }
 
-            let nick = buffer.setting('show_hostnames') ?
-                TextFormatting.formatUserFull(event) :
-                TextFormatting.formatUser(event);
+            let nick = buffer.setting("show_hostnames")
+                ? TextFormatting.formatUserFull(event)
+                : TextFormatting.formatUser(event);
 
             let messageBody = TextFormatting.formatAndT(
-                'channel_join',
+                "channel_join",
                 null,
-                'has_joined',
+                "has_joined",
                 { nick: nick }
             );
 
@@ -557,24 +608,24 @@ function clientMiddleware(state, network) {
                 time: Date.now(),
                 nick: event.nick,
                 message: messageBody,
-                type: 'traffic',
-                type_extra: 'join',
+                type: "traffic",
+                type_extra: "join",
             });
         }
-        if (command === 'kick') {
+        if (command === "kick") {
             let buffer = state.getOrAddBufferByName(networkid, event.channel);
             state.removeUserFromBuffer(buffer, event.kicked);
 
-            let messageBody = '';
+            let messageBody = "";
 
             if (event.kicked === client.user.nick) {
                 buffer.joined = false;
                 buffer.clearUsers();
 
                 messageBody = TextFormatting.formatAndT(
-                    'channel_selfkick',
+                    "channel_selfkick",
                     { reason: event.message },
-                    'kicked_you_from',
+                    "kicked_you_from",
                     {
                         nick: TextFormatting.formatUser(event),
                         channel: event.channel,
@@ -582,9 +633,9 @@ function clientMiddleware(state, network) {
                 );
             } else {
                 messageBody = TextFormatting.formatAndT(
-                    'channel_kicked',
+                    "channel_kicked",
                     { reason: event.message },
-                    'was_kicked_from',
+                    "was_kicked_from",
                     {
                         nick: event.kicked,
                         channel: event.channel,
@@ -597,11 +648,11 @@ function clientMiddleware(state, network) {
                 time: Date.now(),
                 nick: event.nick,
                 message: messageBody,
-                type: 'traffic',
-                type_extra: 'kick',
+                type: "traffic",
+                type_extra: "kick",
             });
         }
-        if (command === 'part') {
+        if (command === "part") {
             let buffer = state.getBufferByName(networkid, event.channel);
             if (!buffer) {
                 return;
@@ -615,33 +666,36 @@ function clientMiddleware(state, network) {
             }
 
             // Remove the user from network state if no remaining common channels
-            let remainingBuffers = state.getBuffersWithUser(networkid, event.nick);
+            let remainingBuffers = state.getBuffersWithUser(
+                networkid,
+                event.nick
+            );
             if (remainingBuffers.length === 0) {
                 state.removeUser(networkid, {
                     nick: event.nick,
                 });
             }
 
-            let nick = buffer.setting('show_hostnames') ?
-                TextFormatting.formatUserFull(event) :
-                TextFormatting.formatUser(event);
+            let nick = buffer.setting("show_hostnames")
+                ? TextFormatting.formatUserFull(event)
+                : TextFormatting.formatUser(event);
 
             let messageBody = TextFormatting.formatAndT(
-                'channel_part',
+                "channel_part",
                 { reason: event.message },
-                'has_left',
-                { nick: nick },
+                "has_left",
+                { nick: nick }
             );
 
             state.addMessage(buffer, {
                 time: Date.now(),
                 nick: event.nick,
                 message: messageBody,
-                type: 'traffic',
-                type_extra: 'part',
+                type: "traffic",
+                type_extra: "part",
             });
         }
-        if (command === 'quit') {
+        if (command === "quit") {
             let buffers = state.getBuffersWithUser(networkid, event.nick);
 
             buffers.forEach((buffer) => {
@@ -654,14 +708,14 @@ function clientMiddleware(state, network) {
                     buffer.clearUsers();
                 }
 
-                let nick = buffer.setting('show_hostnames') ?
-                    TextFormatting.formatUserFull(event) :
-                    TextFormatting.formatUser(event);
+                let nick = buffer.setting("show_hostnames")
+                    ? TextFormatting.formatUserFull(event)
+                    : TextFormatting.formatUser(event);
 
                 let messageBody = TextFormatting.formatAndT(
-                    'channel_quit',
+                    "channel_quit",
                     { reason: event.message },
-                    'has_left',
+                    "has_left",
                     { nick: nick }
                 );
 
@@ -669,8 +723,8 @@ function clientMiddleware(state, network) {
                     time: Date.now(),
                     nick: event.nick,
                     message: messageBody,
-                    type: 'traffic',
-                    type_extra: 'quit',
+                    type: "traffic",
+                    type_extra: "quit",
                 });
             });
 
@@ -679,49 +733,52 @@ function clientMiddleware(state, network) {
             });
         }
 
-        if (command === 'invite') {
+        if (command === "invite") {
             let buffer = network.serverBuffer();
             state.addMessage(buffer, {
-                nick: '*',
-                message: TextFormatting.t('invited_you', {
+                nick: "*",
+                message: TextFormatting.t("invited_you", {
                     nick: event.nick,
                     channel: event.channel,
                 }),
             });
         }
 
-        if (command === 'account') {
-            state.addUser(networkid, { nick: event.nick, account: event.account || '' });
+        if (command === "account") {
+            state.addUser(networkid, {
+                nick: event.nick,
+                account: event.account || "",
+            });
         }
 
-        if (command === 'whois') {
+        if (command === "whois") {
             let obj = {
                 nick: event.nick,
                 host: event.hostname,
                 username: event.ident,
-                away: event.away || '',
+                away: event.away || "",
                 realname: event.real_name,
                 hasWhois: true,
             };
 
             // Some other optional bits of info
             [
-                'actual_host',
-                'helpop',
-                'bot',
-                'server',
-                'server_info',
-                'operator',
-                'channels',
-                'modes',
-                'idle',
-                'logon',
-                'registered_nick',
-                'account',
-                'secure',
-                'special',
+                "actual_host",
+                "helpop",
+                "bot",
+                "server",
+                "server_info",
+                "operator",
+                "channels",
+                "modes",
+                "idle",
+                "logon",
+                "registered_nick",
+                "account",
+                "secure",
+                "special",
             ].forEach((prop) => {
-                if (typeof event[prop] !== 'undefined') {
+                if (typeof event[prop] !== "undefined") {
                     obj[prop] = event[prop];
                 }
             });
@@ -729,50 +786,50 @@ function clientMiddleware(state, network) {
             state.addUser(networkid, obj);
         }
 
-        if (command === 'away') {
+        if (command === "away") {
             state.addUser(networkid, {
                 nick: event.nick,
-                away: event.message || '',
+                away: event.message || "",
             });
             let buffer = state.getActiveBuffer();
             if (buffer && event.nick === network.nick) {
-                network.away = 'away';
+                network.away = "away";
                 state.addMessage(buffer, {
                     time: eventTime,
                     server_time: serverTime,
-                    nick: '*',
-                    type: 'presence',
+                    nick: "*",
+                    type: "presence",
                     message: event.message,
                 });
             }
         }
 
-        if (command === 'back') {
+        if (command === "back") {
             state.addUser(networkid, {
                 nick: event.nick,
-                away: '',
+                away: "",
             });
             let buffer = state.getActiveBuffer();
             if (buffer && event.nick === network.nick) {
-                network.away = '';
+                network.away = "";
                 state.addMessage(buffer, {
                     time: eventTime,
                     server_time: serverTime,
-                    nick: '*',
-                    type: 'presence',
+                    nick: "*",
+                    type: "presence",
                     message: event.message,
                 });
             }
         }
 
-        if (command === 'wholist') {
+        if (command === "wholist") {
             state.usersTransaction(networkid, (users) => {
                 event.users.forEach((eventUser) => {
                     let userObj = {
                         nick: eventUser.nick,
                         host: eventUser.hostname || undefined,
                         username: eventUser.ident || undefined,
-                        away: eventUser.away ? 'Away' : '',
+                        away: eventUser.away ? "Away" : "",
                         realname: eventUser.real_name,
                         account: eventUser.account || undefined,
                     };
@@ -798,71 +855,74 @@ function clientMiddleware(state, network) {
             });
         }
 
-        if (command === 'channel list start') {
+        if (command === "channel list start") {
             network.channel_list_cache = [];
-            network.channel_list_state = 'updating';
+            network.channel_list_state = "updating";
         }
-        if (command === 'channel list') {
-            network.channel_list_state = 'updating';
+        if (command === "channel list") {
+            network.channel_list_state = "updating";
             // Filter private channels from the channel list
-            let filteredEvent = _.filter(event, (o) => o.channel !== '*');
+            let filteredEvent = _.filter(event, (o) => o.channel !== "*");
             // Store the channels in channel_list_cache before moving it all to
             // channel_list at the end. This gives a huge performance boost since
             // it doesn't need to be all reactive for every update
-            network.channel_list_cache = (network.channel_list_cache || []).concat(filteredEvent);
+            network.channel_list_cache = (
+                network.channel_list_cache || []
+            ).concat(filteredEvent);
         }
-        if (command === 'channel list end') {
+        if (command === "channel list end") {
             network.channel_list = network.channel_list_cache || [];
-            network.channel_list_state = 'updated';
+            network.channel_list_state = "updated";
             delete network.channel_list_cache;
         }
 
-        if (command === 'motd') {
+        if (command === "motd") {
             let buffer = network.serverBuffer();
-            let messageBody = TextFormatting.formatText('motd', {
+            let messageBody = TextFormatting.formatText("motd", {
                 text: event.motd,
             });
             state.addMessage(buffer, {
                 time: eventTime,
                 server_time: serverTime,
-                nick: '',
+                nick: "",
                 message: messageBody,
-                type: 'motd',
+                type: "motd",
             });
         }
 
-        if (command === 'nick in use' && !client.connection.registered) {
+        if (command === "nick in use" && !client.connection.registered) {
             let newNick = client.user.nick + rand(1, 100);
             let messageBody = TextFormatting.formatAndT(
-                'nickname_alreadyinuse',
+                "nickname_alreadyinuse",
                 null,
-                'nick_in_use_retrying',
-                { nick: client.user.nick, newnick: newNick },
+                "nick_in_use_retrying",
+                { nick: client.user.nick, newnick: newNick }
             );
 
             network.buffers.forEach((b) => {
                 state.addMessage(b, {
                     time: Date.now(),
-                    nick: '',
+                    nick: "",
                     message: messageBody,
-                    type: 'error',
+                    type: "error",
                 });
             });
 
             client.changeNick(newNick);
         }
 
-        if (command === 'nick in use' && client.connection.registered) {
+        if (command === "nick in use" && client.connection.registered) {
             let buffer = state.getActiveBuffer();
-            buffer && state.addMessage(buffer, {
-                time: Date.now(),
-                nick: '',
-                type: 'error',
-                message: `The nickname '${event.nick}' is already in use!`,
-            });
+            buffer &&
+                state.addMessage(buffer, {
+                    time: Date.now(),
+                    nick: "",
+                    type: "error",
+                    message: `The nickname '${event.nick}' is already in use!`,
+                });
         }
 
-        if (command === 'nick') {
+        if (command === "nick") {
             if (event.nick === client.user.nick) {
                 network.nick = event.new_nick;
             }
@@ -870,10 +930,10 @@ function clientMiddleware(state, network) {
             state.changeUserNick(networkid, event.nick, event.new_nick);
 
             let messageBody = TextFormatting.formatAndT(
-                'nick_changed',
+                "nick_changed",
                 null,
-                'now_known_as',
-                { nick: event.nick, newnick: event.new_nick },
+                "now_known_as",
+                { nick: event.nick, newnick: event.new_nick }
             );
 
             let buffers = state.getBuffersWithUser(networkid, event.new_nick);
@@ -881,18 +941,19 @@ function clientMiddleware(state, network) {
                 state.addMessage(buffer, {
                     time: eventTime,
                     server_time: serverTime,
-                    nick: '',
+                    nick: "",
                     message: messageBody,
-                    type: 'nick',
+                    type: "nick",
                 });
             });
         }
 
-        if (command === 'userlist') {
+        if (command === "userlist") {
             let buffer = state.getOrAddBufferByName(networkid, event.channel);
-            let hadExistingUsers = Object.keys(buffer.users)
-                .filter((u) => u !== network.ircClient.user.nick)
-                .length > 0;
+            let hadExistingUsers =
+                Object.keys(buffer.users).filter(
+                    (u) => u !== network.ircClient.user.nick
+                ).length > 0;
             let users = [];
             event.users.forEach((user) => {
                 users.push({
@@ -906,22 +967,27 @@ function clientMiddleware(state, network) {
             });
             state.addMultipleUsersToBuffer(buffer, users);
 
-            if (!hadExistingUsers && network.ircClient.chathistory.isSupported()) {
+            if (
+                !hadExistingUsers &&
+                network.ircClient.chathistory.isSupported()
+            ) {
                 let correctBuffer = buffer.isChannel() || buffer.isQuery();
 
-                // TODO: If this is a reconnect (numConnects > 1) then paginate backwards
+                // TODO: If this is a reconnect (numConnects > 1) then paginate
+                // backwards
                 //       until we reach our last message.
                 //       OR
-                //       Add a marker at the gap between this new chathistory block starts and when
-                //       the existing messages end so that we can add a "load missing messages"
-                //       button there or have it auto request them when it scrolls into view
+                //       Add a marker at the gap between this new chathistory block
+                //       starts and when the existing messages end so that we can add a
+                //       "load missing messages" button there or have it auto request
+                //       them when it scrolls into view
                 if (correctBuffer) {
                     buffer.requestLatestScrollback();
                 }
             }
         }
 
-        if (command === 'channel info') {
+        if (command === "channel info") {
             let buffer = network.bufferByName(event.channel);
             if (!buffer) {
                 return;
@@ -931,7 +997,7 @@ function clientMiddleware(state, network) {
                 let modeStrs = [];
 
                 event.modes.forEach((mode) => {
-                    let adding = mode.mode[0] === '+';
+                    let adding = mode.mode[0] === "+";
                     let modeChar = mode.mode.substr(1);
 
                     if (adding) {
@@ -940,15 +1006,17 @@ function clientMiddleware(state, network) {
                         state.$delete(buffer.modes, modeChar);
                     }
 
-                    modeStrs.push(mode.mode + (mode.param ? ' ' + mode.param : ''));
+                    modeStrs.push(
+                        mode.mode + (mode.param ? " " + mode.param : "")
+                    );
                 });
 
                 if (buffer.flags.requested_modes) {
                     state.addMessage(buffer, {
                         time: eventTime,
                         server_time: serverTime,
-                        nick: '*',
-                        message: buffer.name + ' ' + modeStrs.join(', '),
+                        nick: "*",
+                        message: buffer.name + " " + modeStrs.join(", "),
                     });
                 }
             }
@@ -958,21 +1026,21 @@ function clientMiddleware(state, network) {
             }
 
             if (event.created_at && buffer.flags.requested_modes) {
-                let tFormat = buffer.setting('timestamp_full_format');
-                let timeCreated = tFormat ?
-                    strftime(tFormat, new Date(event.created_at * 1000)) :
-                    (new Date(event.created_at * 1000)).toLocaleString();
+                let tFormat = buffer.setting("timestamp_full_format");
+                let timeCreated = tFormat
+                    ? strftime(tFormat, new Date(event.created_at * 1000))
+                    : new Date(event.created_at * 1000).toLocaleString();
 
                 state.addMessage(buffer, {
                     time: eventTime,
                     server_time: serverTime,
-                    nick: '*',
-                    message: buffer.name + ' ' + timeCreated,
+                    nick: "*",
+                    message: buffer.name + " " + timeCreated,
                 });
             }
         }
 
-        if (command === 'mode') {
+        if (command === "mode") {
             let buffer = network.bufferByName(event.target);
             let modeStrs = {};
             if (buffer) {
@@ -981,15 +1049,19 @@ function clientMiddleware(state, network) {
                 event.modes.forEach((mode) => {
                     modeStrs[mode.mode] = modeStrs[mode.mode] || [];
 
-                    // If this mode has a user prefix then we need to update the user object
-                    let prefix = _.find(network.ircClient.network.options.PREFIX, {
-                        mode: mode.mode[1],
-                    });
+                    // If this mode has a user prefix then we need to update the user
+                    // object
+                    let prefix = _.find(
+                        network.ircClient.network.options.PREFIX,
+                        {
+                            mode: mode.mode[1],
+                        }
+                    );
 
                     if (prefix) {
                         let user = state.getUser(network.id, mode.param);
                         if (user) {
-                            let adding = mode.mode[0] === '+';
+                            let adding = mode.mode[0] === "+";
                             let modes = user.buffers[buffer.id].modes;
                             let modeIdx = modes.indexOf(prefix.mode);
 
@@ -1005,7 +1077,7 @@ function clientMiddleware(state, network) {
                     } else {
                         // Not a user prefix, add it as a channel mode
                         // TODO: Why are these not appearing as the 'channel info' command?
-                        let adding = mode.mode[0] === '+';
+                        let adding = mode.mode[0] === "+";
                         let modeChar = mode.mode.substr(1);
 
                         if (adding) {
@@ -1014,39 +1086,42 @@ function clientMiddleware(state, network) {
                             state.$delete(buffer.modes, modeChar);
                         }
 
-                        modeStrs[mode.mode].push({ target: buffer.name, param: mode.param });
+                        modeStrs[mode.mode].push({
+                            target: buffer.name,
+                            param: mode.param,
+                        });
                     }
                 });
 
                 // Mode -> locale ID mappings
                 // If a mode isn't found here, the local ID modes_other is used
                 let modeLocaleIds = {
-                    '+o': 'modes_give_ops',
-                    '-o': 'modes_take_ops',
-                    '+h': 'modes_give_halfops',
-                    '-h': 'modes_take_halfops',
-                    '+v': 'modes_give_voice',
-                    '-v': 'modes_take_voice',
-                    '+a': 'modes_give_admin',
-                    '-a': 'modes_take_admin',
-                    '+q': 'modes_give_owner',
-                    '-q': 'modes_take_owner',
-                    '+b': 'modes_gives_ban',
-                    '-b': 'modes_takes_ban',
+                    "+o": "modes_give_ops",
+                    "-o": "modes_take_ops",
+                    "+h": "modes_give_halfops",
+                    "-h": "modes_take_halfops",
+                    "+v": "modes_give_voice",
+                    "-v": "modes_take_voice",
+                    "+a": "modes_give_admin",
+                    "-a": "modes_take_admin",
+                    "+q": "modes_give_owner",
+                    "-q": "modes_take_owner",
+                    "+b": "modes_gives_ban",
+                    "-b": "modes_takes_ban",
                 };
 
                 // Some IRCd differences
                 if (!IrcdDiffs.isQChannelModeOwner(network)) {
-                    delete modeLocaleIds['+q'];
-                    delete modeLocaleIds['-q'];
+                    delete modeLocaleIds["+q"];
+                    delete modeLocaleIds["-q"];
                 }
                 if (!IrcdDiffs.isAChannelModeAdmin(network)) {
-                    delete modeLocaleIds['+a'];
-                    delete modeLocaleIds['-a'];
+                    delete modeLocaleIds["+a"];
+                    delete modeLocaleIds["-a"];
                 }
                 if (!IrcdDiffs.supportsHalfOp(network)) {
-                    delete modeLocaleIds['+h'];
-                    delete modeLocaleIds['-h'];
+                    delete modeLocaleIds["+h"];
+                    delete modeLocaleIds["-h"];
                 }
 
                 // Some modes have specific data for its locale data while most
@@ -1055,15 +1130,19 @@ function clientMiddleware(state, network) {
                 let modeLocaleDataBuilders = {
                     default(targets, mode) {
                         return {
-                            mode: mode + (targets[0].param ? ' ' + targets[0].param : ''),
-                            target: targets.map((t) => t.target).join(', '),
+                            mode:
+                                mode +
+                                (targets[0].param
+                                    ? " " + targets[0].param
+                                    : ""),
+                            target: targets.map((t) => t.target).join(", "),
                             nick: event.nick,
                         };
                     },
                     b(targets, mode) {
                         return {
                             mode: mode,
-                            target: targets[0].param ? targets[0].param : '',
+                            target: targets[0].param ? targets[0].param : "",
                             nick: event.nick,
                         };
                     },
@@ -1077,22 +1156,22 @@ function clientMiddleware(state, network) {
                     let localeData = localeDataFn(targets, mode);
 
                     // Translate using the built locale data
-                    let localeKey = modeLocaleIds[mode] || 'modes_other';
+                    let localeKey = modeLocaleIds[mode] || "modes_other";
                     let text = TextFormatting.t(localeKey, localeData);
 
-                    let messageBody = TextFormatting.formatText('mode', {
+                    let messageBody = TextFormatting.formatText("mode", {
                         nick: event.nick,
                         username: event.ident,
                         host: event.hostname,
-                        target: targets.map((t) => t.target).join(', '),
+                        target: targets.map((t) => t.target).join(", "),
                         text,
                     });
                     state.addMessage(buffer, {
                         time: eventTime,
                         server_time: serverTime,
-                        nick: '',
+                        nick: "",
                         message: messageBody,
-                        type: 'mode',
+                        type: "mode",
                     });
                 });
             } else {
@@ -1103,32 +1182,32 @@ function clientMiddleware(state, network) {
                 // Group each - or + modes to each of their own message lines
                 event.modes.forEach((mode) => {
                     if (mode.param) {
-                        modeslines[mode.mode] = ' ' + mode.param;
-                    } else if (mode.mode[0] === '-') {
-                        if (!modeslines['-']) {
-                            modeslines['-'] = '';
+                        modeslines[mode.mode] = " " + mode.param;
+                    } else if (mode.mode[0] === "-") {
+                        if (!modeslines["-"]) {
+                            modeslines["-"] = "";
                         }
-                        modeslines['-'] += mode.mode.slice(1);
+                        modeslines["-"] += mode.mode.slice(1);
                     } else {
-                        if (!modeslines['+']) {
-                            modeslines['+'] = '';
+                        if (!modeslines["+"]) {
+                            modeslines["+"] = "";
                         }
-                        if (mode.mode[0] === '+') {
-                            modeslines['+'] += mode.mode.slice(1);
+                        if (mode.mode[0] === "+") {
+                            modeslines["+"] += mode.mode.slice(1);
                         } else {
-                            modeslines['+'] += mode.mode;
+                            modeslines["+"] += mode.mode;
                         }
                     }
                 });
 
                 let serverBuffer = network.serverBuffer();
                 _.each(modeslines, (mode, value) => {
-                    let text = TextFormatting.t('modes_other', {
+                    let text = TextFormatting.t("modes_other", {
                         nick: event.nick,
                         target: event.target,
                         mode: value + mode,
                     });
-                    let messageBody = TextFormatting.formatText('mode', {
+                    let messageBody = TextFormatting.formatText("mode", {
                         nick: event.nick,
                         username: event.ident,
                         host: event.hostname,
@@ -1137,77 +1216,82 @@ function clientMiddleware(state, network) {
                     });
                     state.addMessage(serverBuffer, {
                         time: Date.now(),
-                        nick: '',
+                        nick: "",
                         message: messageBody,
-                        type: 'mode',
+                        type: "mode",
                     });
                 });
             }
         }
 
-        if (command === 'banlist') {
+        if (command === "banlist") {
             let buffer = state.getBufferByName(networkid, event.channel);
             if (buffer && buffer.flags.requested_banlist) {
                 if (!event.bans || event.bans.length === 0) {
                     state.addMessage(buffer, {
                         time: eventTime,
                         server_time: serverTime,
-                        nick: '',
-                        message: TextFormatting.t('bans_nobody'),
-                        type: 'banlist',
+                        nick: "",
+                        message: TextFormatting.t("bans_nobody"),
+                        type: "banlist",
                     });
                 } else {
-                    let banText = '';
+                    let banText = "";
                     _.each(event.bans, (ban) => {
-                        let dateStr = (new Date(ban.banned_at * 1000)).toDateString();
+                        let dateStr = new Date(
+                            ban.banned_at * 1000
+                        ).toDateString();
                         banText += `+b ${ban.banned} [by ${ban.banned_by}, ${dateStr}]\n`;
                     });
 
                     state.addMessage(buffer, {
                         time: eventTime,
                         server_time: serverTime,
-                        nick: '*',
+                        nick: "*",
                         message: banText,
-                        type: 'banlist',
+                        type: "banlist",
                     });
                 }
                 buffer.flags.requested_banlist = false;
             }
         }
 
-        if (command === 'topic') {
+        if (command === "topic") {
             let buffer = state.getOrAddBufferByName(networkid, event.channel);
-            buffer.topic = event.topic || '';
+            buffer.topic = event.topic || "";
 
-            let messageBody = '';
+            let messageBody = "";
 
             if (event.nick) {
                 messageBody = TextFormatting.formatAndT(
-                    'channel_topic',
+                    "channel_topic",
                     null,
-                    'changed_topic_to',
-                    { nick: event.nick, topic: event.topic },
+                    "changed_topic_to",
+                    { nick: event.nick, topic: event.topic }
                 );
             } else if (buffer.topic.trim()) {
-                messageBody = TextFormatting.formatText('channel_topic', buffer.topic);
+                messageBody = TextFormatting.formatText(
+                    "channel_topic",
+                    buffer.topic
+                );
             }
 
             if (messageBody) {
                 state.addMessage(buffer, {
                     time: eventTime,
                     server_time: serverTime,
-                    nick: '',
+                    nick: "",
                     message: messageBody,
-                    type: 'topic',
+                    type: "topic",
                 });
             }
         }
 
-        if (command === 'ctcp response' || command === 'ctcp request') {
-            let buffer = network.bufferByName(event.target) || network.serverBuffer();
-            let textFormatId = command === 'ctcp response' ?
-                'ctcp_response' :
-                'ctcp_request';
+        if (command === "ctcp response" || command === "ctcp request") {
+            let buffer =
+                network.bufferByName(event.target) || network.serverBuffer();
+            let textFormatId =
+                command === "ctcp response" ? "ctcp_response" : "ctcp_request";
             let messageBody = TextFormatting.formatText(textFormatId, {
                 nick: event.nick,
                 message: event.message,
@@ -1217,27 +1301,27 @@ function clientMiddleware(state, network) {
             state.addMessage(buffer, {
                 time: eventTime,
                 server_time: serverTime,
-                nick: '',
+                nick: "",
                 message: messageBody,
-                type: 'error',
+                type: "error",
             });
 
-            if (command === 'ctcp request' && event.type === 'VERSION') {
-                client.ctcpResponse(event.nick, 'VERSION', 'Kiwi IRC');
+            if (command === "ctcp request" && event.type === "VERSION") {
+                client.ctcpResponse(event.nick, "VERSION", "Kiwi IRC");
             }
         }
 
-        if (command === 'nick invalid') {
-            let messageBody = TextFormatting.formatText('general_error', {
+        if (command === "nick invalid") {
+            let messageBody = TextFormatting.formatText("general_error", {
                 text: event.reason,
             });
             let buffer = state.getActiveBuffer();
             state.addMessage(buffer, {
                 time: eventTime,
                 server_time: serverTime,
-                nick: '',
+                nick: "",
                 message: messageBody,
-                type: 'error',
+                type: "error",
             });
 
             if (!isRegistered) {
@@ -1247,24 +1331,28 @@ function clientMiddleware(state, network) {
             }
         }
 
-        if (command === 'irc error') {
+        if (command === "irc error") {
             let buffer;
             if (event.channel || event.nick) {
-                buffer = state.getOrAddBufferByName(network.id, event.channel || event.nick);
+                buffer = state.getOrAddBufferByName(
+                    network.id,
+                    event.channel || event.nick
+                );
             }
             if (!buffer) {
                 buffer = network.serverBuffer();
             }
 
             if (!buffer) {
-                // we could not find a buffer, this is likely because the network was removed
+                // we could not find a buffer, this is likely because the network was
+                // removed
                 return;
             }
 
-            // TODO: Some of these errors contain a .error property whcih we can match against,
-            // ie. password_mismatch.
+            // TODO: Some of these errors contain a .error property whcih we can match
+            // against, ie. password_mismatch.
 
-            if (event.error === 'bad_channel_key') {
+            if (event.error === "bad_channel_key") {
                 buffer.flags.channel_badkey = true;
             }
 
@@ -1273,20 +1361,21 @@ function clientMiddleware(state, network) {
                 if (!isRegistered) {
                     network.last_error = event.reason;
                 }
-                let messageBody = TextFormatting.formatText('general_error', {
+                let messageBody = TextFormatting.formatText("general_error", {
                     text: event.reason || event.error,
                 });
                 state.addMessage(buffer, {
                     time: eventTime,
                     server_time: serverTime,
-                    nick: '',
+                    nick: "",
                     message: messageBody,
-                    type: 'error',
+                    type: "error",
                 });
             }
 
-            // Getting an error about a channel while we are not joined means that we couldn't join
-            // or do some action on it. Disable it until we manually reattempt to join.
+            // Getting an error about a channel while we are not joined means that we
+            // couldn't join or do some action on it. Disable it until we manually
+            // reattempt to join.
             if (buffer.isChannel() && !buffer.joined) {
                 buffer.enabled = false;
             }

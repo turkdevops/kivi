@@ -1072,4 +1072,3 @@ msgstr "{{nick}} je promijenio nadimak u {{newnick}}"
 #: {{nick}} changed the topic to: {{topic}}
 msgid "changed_topic_to"
 msgstr "je promijenio temu u: {{topic}}"
-

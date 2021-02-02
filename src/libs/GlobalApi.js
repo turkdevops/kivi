@@ -1,13 +1,13 @@
-'kiwi public';
+"kiwi public";
 
 /** @module */
 
-import EventEmitter from 'eventemitter3';
-import Vue from 'vue';
-import _ from 'lodash';
-import compareVersions from 'compare-versions';
-import * as Misc from '@/helpers/Misc';
-import Logger from './Logger';
+import EventEmitter from "eventemitter3";
+import Vue from "vue";
+import _ from "lodash";
+import compareVersions from "compare-versions";
+import * as Misc from "@/helpers/Misc";
+import Logger from "./Logger";
 
 let singletonInstance = null;
 let pluginsToInit = [];
@@ -40,7 +40,7 @@ export default class GlobalApi extends EventEmitter {
         /* eslint-disable no-underscore-dangle */
         this.exports = window._kiwi_exports || {};
 
-        this.on('init', () => {
+        this.on("init", () => {
             this.isReady = true;
             this.initPlugins();
         });
@@ -58,10 +58,11 @@ export default class GlobalApi extends EventEmitter {
     /**
      * Register a plugin with kiwi
      *
-     * Plugins being loaded at startup will be registered once Kiwi is ready. At any
-     * other point the plugin will be registered instantly
+     * Plugins being loaded at startup will be registered once Kiwi is ready. At
+     * any other point the plugin will be registered instantly
      * @param {String} pluginName The name of this plugin
-     * @param {Function} fn A callback function to start the plugin. function(kiwi, logger)
+     * @param {Function} fn A callback function to start the plugin.
+     *     function(kiwi, logger)
      */
     plugin(pluginName, fn) {
         let plugin = { name: pluginName, fn: fn };
@@ -82,7 +83,7 @@ export default class GlobalApi extends EventEmitter {
         let pluginLogger = Logger.namespace(`Plugin ${plugin.name}`);
         try {
             plugin.fn(this, pluginLogger);
-            this.state.$emit('plugin.loaded', { name: plugin.name });
+            this.state.$emit("plugin.loaded", { name: plugin.name });
         } catch (err) {
             pluginLogger.error(err.stack);
         }
@@ -95,10 +96,10 @@ export default class GlobalApi extends EventEmitter {
      * @param {String} mod The module path
      */
     require(modPath) {
-        let path = modPath.replace(/\//g, '.');
+        let path = modPath.replace(/\//g, ".");
         let mod = _.get(this.exports, path);
-        if (typeof mod === 'undefined') {
-            Logger.error('Module does not exist: ' + modPath);
+        if (typeof mod === "undefined") {
+            Logger.error("Module does not exist: " + modPath);
         }
 
         return mod;
@@ -114,7 +115,7 @@ export default class GlobalApi extends EventEmitter {
 
         this.state.$emit = (...args) => {
             try {
-                thisEmit.call(this, 'all', args[0], ...args.slice(1));
+                thisEmit.call(this, "all", args[0], ...args.slice(1));
                 thisEmit.call(this, ...args);
             } catch (err) {
                 Logger.error(err.stack);
@@ -160,23 +161,23 @@ export default class GlobalApi extends EventEmitter {
         };
 
         switch (type) {
-        case 'input':
-            this.controlInputPlugins.push(plugin);
-            break;
-        case 'browser':
-            this.stateBrowserPlugins.push(plugin);
-            break;
-        case 'header_channel':
-            this.channelHeaderPlugins.push(plugin);
-            break;
-        case 'header_query':
-            this.queryHeaderPlugins.push(plugin);
-            break;
-        case 'about_buffer':
-            this.aboutBufferPlugins.push(plugin);
-            break;
-        default:
-            break;
+            case "input":
+                this.controlInputPlugins.push(plugin);
+                break;
+            case "browser":
+                this.stateBrowserPlugins.push(plugin);
+                break;
+            case "header_channel":
+                this.channelHeaderPlugins.push(plugin);
+                break;
+            case "header_query":
+                this.queryHeaderPlugins.push(plugin);
+                break;
+            case "about_buffer":
+                this.aboutBufferPlugins.push(plugin);
+                break;
+            default:
+                break;
         }
     }
 
@@ -185,9 +186,11 @@ export default class GlobalApi extends EventEmitter {
      * - addTab('channel', 'title', component, props)
      * - addTab('settings', 'title', component, props)
      * - addTab('server', 'title', component, props)
-     * @param {String} type The type of tab to add. This determines where it will be shown
+     * @param {String} type The type of tab to add. This determines where it will
+     *     be shown
      * @param {String} title The title shown on the tab
-     * @param {Component} component The vuejs component that is displayed for this tab
+     * @param {Component} component The vuejs component that is displayed for this
+     *     tab
      * @param {Object} props Optional properties for the vuejs component
      */
     addTab(type, title, component, props) {
@@ -199,23 +202,23 @@ export default class GlobalApi extends EventEmitter {
         };
 
         switch (type) {
-        case 'channel':
-            this.sideBarPlugins.push(plugin);
-            break;
-        case 'settings':
-            this.appSettingsPlugins.push(plugin);
-            break;
-        case 'server':
-            this.serverViewPlugins.push(plugin);
-            break;
-        default:
-            break;
+            case "channel":
+                this.sideBarPlugins.push(plugin);
+                break;
+            case "settings":
+                this.appSettingsPlugins.push(plugin);
+                break;
+            case "server":
+                this.serverViewPlugins.push(plugin);
+                break;
+            default:
+                break;
         }
     }
 
     /**
-     * Register a Vue component that may be shown in future. It is shown over the entire
-     * client alongside the StateBrowser
+     * Register a Vue component that may be shown in future. It is shown over the
+     * entire client alongside the StateBrowser
      * @param {String} name A name to reference this view in future
      * @param {Component} component The vuejs component to create the view
      * @param {Object} props Optional properties the the vuejs component
@@ -236,9 +239,9 @@ export default class GlobalApi extends EventEmitter {
         // null disables any active component and reverts the UI back to the buffers
         let tab = this.tabs[name];
         if (tab) {
-            this.state.$emit('active.component', tab.component, tab.props);
+            this.state.$emit("active.component", tab.component, tab.props);
         } else {
-            this.state.$emit('active.component', null);
+            this.state.$emit("active.component", null);
         }
     }
 
@@ -247,7 +250,7 @@ export default class GlobalApi extends EventEmitter {
      * @param {Object} component The vuejs component to render
      */
     showInSidebar(component) {
-        this.state.$emit('sidebar.component', component);
+        this.state.$emit("sidebar.component", component);
     }
 
     /**

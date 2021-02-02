@@ -1,4 +1,5 @@
-// Define a non-enumerable property on an object with an optional setter callback
+// Define a non-enumerable property on an object with an optional setter
+// callback
 export function def(target, key, value, canSet) {
     let val = value;
 
@@ -12,7 +13,7 @@ export function def(target, key, value, canSet) {
         definition.set = function set(newVal) {
             let oldVal = val;
             val = newVal;
-            if (typeof canSet === 'function') {
+            if (typeof canSet === "function") {
                 canSet(newVal, oldVal);
             }
         };
@@ -20,7 +21,7 @@ export function def(target, key, value, canSet) {
 
     Object.defineProperty(target, key, definition);
 
-    if (typeof canSet === 'function') {
+    if (typeof canSet === "function") {
         canSet(val);
     }
 }

@@ -1,4 +1,4 @@
-'kiwi public';
+"kiwi public";
 
 /** @module */
 
@@ -13,22 +13,23 @@ export default function typingMiddleware() {
 
     function theMiddleware(command, message, rawLine, client, next) {
         if (
-            !(command === 'TAGMSG' && message.tags['+draft/typing']) &&
-            !(command === 'PRIVMSG' && message.nick)
+            !(command === "TAGMSG" && message.tags["+draft/typing"]) &&
+            !(command === "PRIVMSG" && message.nick)
         ) {
             next();
             return;
         }
 
         // if we are params[0] then the target is the sender (direct message)
-        let target = (message.params[0].toLowerCase() === client.user.nick.toLowerCase()) ?
-            message.nick :
-            message.params[0];
+        let target =
+            message.params[0].toLowerCase() === client.user.nick.toLowerCase()
+                ? message.nick
+                : message.params[0];
 
         // if its a privmsg without typing tag emit done
-        let status = message.tags['+draft/typing'] || 'done';
+        let status = message.tags["+draft/typing"] || "done";
 
-        client.emit('typing', {
+        client.emit("typing", {
             target: target,
             nick: message.nick,
             ident: message.ident,
@@ -41,11 +42,11 @@ export default function typingMiddleware() {
 }
 
 function addFunctionsToClient(client) {
-    let typing = client.typing = {};
+    let typing = (client.typing = {});
     let activeTyping = Object.create(null);
 
     function isEnabled() {
-        return client.network.cap.isEnabled('message-tags');
+        return client.network.cap.isEnabled("message-tags");
     }
 
     typing.start = function start(target) {
@@ -60,8 +61,8 @@ function addFunctionsToClient(client) {
 
         activeTyping[target.toLowerCase()] = Date.now();
 
-        let message = new client.Message('TAGMSG', target);
-        message.tags['+draft/typing'] = 'active';
+        let message = new client.Message("TAGMSG", target);
+        message.tags["+draft/typing"] = "active";
         client.raw(message);
     };
 
@@ -70,8 +71,8 @@ function addFunctionsToClient(client) {
             return;
         }
 
-        let message = new client.Message('TAGMSG', target);
-        message.tags['+draft/typing'] = 'paused';
+        let message = new client.Message("TAGMSG", target);
+        message.tags["+draft/typing"] = "paused";
         client.raw(message);
     };
 
@@ -80,8 +81,8 @@ function addFunctionsToClient(client) {
             return;
         }
 
-        let message = new client.Message('TAGMSG', target);
-        message.tags['+draft/typing'] = 'done';
+        let message = new client.Message("TAGMSG", target);
+        message.tags["+draft/typing"] = "done";
         client.raw(message);
 
         delete activeTyping[target.toLowerCase()];

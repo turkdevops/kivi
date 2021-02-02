@@ -1,9 +1,9 @@
-'kiwi public';
+"kiwi public";
 
 // Do channels support half-op mode
 export function supportsHalfOp(network) {
     let ircdType = network.ircd.toLowerCase();
-    let notSupported = ['ircd-seven', 'charybdis'];
+    let notSupported = ["ircd-seven", "charybdis"];
 
     for (let i = 0; i < notSupported.length; i++) {
         if (ircdType.indexOf(notSupported[i]) > -1) {
@@ -17,7 +17,7 @@ export function supportsHalfOp(network) {
 // Does channel mode +a = admin
 export function isAChannelModeAdmin(network) {
     let ircdType = network.ircd.toLowerCase();
-    let notAdmin = ['ircd-seven', 'charybdis'];
+    let notAdmin = ["ircd-seven", "charybdis"];
 
     for (let i = 0; i < notAdmin.length; i++) {
         if (ircdType.indexOf(notAdmin[i]) > -1) {
@@ -31,7 +31,7 @@ export function isAChannelModeAdmin(network) {
 // Does channel mode +q = owner
 export function isQChannelModeOwner(network) {
     let ircdType = network.ircd.toLowerCase();
-    let notOwner = ['ircd-seven', 'charybdis'];
+    let notOwner = ["ircd-seven", "charybdis"];
 
     for (let i = 0; i < notOwner.length; i++) {
         if (ircdType.indexOf(notOwner[i]) > -1) {
@@ -51,17 +51,17 @@ export function extbanAccount(network) {
 
     // Eg. ~,qjncrRa
     // Eg. ,qjncrRa
-    let extban = network.ircClient.network.supports('EXTBAN') || '';
+    let extban = network.ircClient.network.supports("EXTBAN") || "";
     if (!extban) {
-        return '';
+        return "";
     }
 
-    let prefix = extban.split(',')[0];
-    let type = 'a';
+    let prefix = extban.split(",")[0];
+    let type = "a";
 
     // https://docs.inspircd.org/3/modules/services_account/#extended-bans
-    if (ircdType.indexOf('inspircd') > -1) {
-        type = 'R';
+    if (ircdType.indexOf("inspircd") > -1) {
+        type = "R";
     }
 
     return prefix + type;

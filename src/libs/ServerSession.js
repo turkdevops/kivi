@@ -1,22 +1,22 @@
-'kiwi public';
+"kiwi public";
 
-import EventEmitter from 'eventemitter3';
-import state from './state';
-import * as ServerConnection from './ServerConnection';
+import EventEmitter from "eventemitter3";
+import state from "./state";
+import * as ServerConnection from "./ServerConnection";
 
 export default class ServerSession {
     constructor(sessionId) {
         let channelConstruct = ServerConnection.createChannelConstructor(
             state.settings.kiwiServer,
-            sessionId || '',
-            '0'
+            sessionId || "",
+            "0"
         );
 
         this.bus = new EventEmitter();
         this.channel = channelConstruct();
-        this.channel.on('line', (line) => {
-            if (line.indexOf('CONTROL ') === 0) {
-                let parts = line.split(' ');
+        this.channel.on("line", (line) => {
+            if (line.indexOf("CONTROL ") === 0) {
+                let parts = line.split(" ");
 
                 // Remove the 'CONTROL' first part
                 parts.shift();
@@ -29,10 +29,10 @@ export default class ServerSession {
 
     auth(userId, password) {
         return new Promise((resolve, reject) => {
-            this.bus.once('AUTH', (params) => {
+            this.bus.once("AUTH", (params) => {
                 let result = params[0];
 
-                if (result === 'OK') {
+                if (result === "OK") {
                     resolve(true);
                 } else {
                     reject(result);
@@ -48,8 +48,8 @@ export default class ServerSession {
             let networks = Object.create(null);
 
             let onListing = (params) => {
-                if (params[1] === 'END') {
-                    this.bus.off('LISTING', onListing);
+                if (params[1] === "END") {
+                    this.bus.off("LISTING", onListing);
 
                     // Convert our networks object to an array first
                     let networkArr = [];
@@ -61,12 +61,12 @@ export default class ServerSession {
                     return;
                 }
 
-                if (params[0] === 'NETWORK') {
+                if (params[0] === "NETWORK") {
                     let props = params.slice(1);
                     let network = { buffers: [] };
 
                     props.forEach((prop) => {
-                        let parts = prop.split('=');
+                        let parts = prop.split("=");
                         if (parts[0] && parts[1]) {
                             network[parts[0].toLowerCase()] = parts[1];
                         }
@@ -77,12 +77,12 @@ export default class ServerSession {
                     }
                 }
 
-                if (params[0] === 'BUFFER') {
+                if (params[0] === "BUFFER") {
                     let props = params.slice(1);
                     let buffer = {};
 
                     props.forEach((prop) => {
-                        let parts = prop.split('=');
+                        let parts = prop.split("=");
                         if (parts[0] && parts[1]) {
                             buffer[parts[0].toLowerCase()] = parts[1];
                         }
@@ -95,8 +95,8 @@ export default class ServerSession {
                 }
             };
 
-            this.bus.on('LISTING', onListing);
-            this.channel.sendControl('CONTROL LIST NETWORKS');
+            this.bus.on("LISTING", onListing);
+            this.channel.sendControl("CONTROL LIST NETWORKS");
         });
     }
 }

@@ -1,4 +1,4 @@
-'kiwi public';
+"kiwi public";
 
 /** @module */
 
@@ -21,25 +21,20 @@ export class AudioManager {
     }
 
     listen(state) {
-        state.$on('audio.bleep', () => {
+        state.$on("audio.bleep", () => {
             this.play();
         });
     }
 
     /** Watch the Kiwi state for any message highlights and play an alert */
     watchForMessages(state) {
-        state.$on('message.new', (event) => {
+        state.$on("message.new", (event) => {
             let { message, buffer } = event;
-            if (buffer.setting('mute_sound')) {
+            if (buffer.setting("mute_sound")) {
                 return;
             }
 
-            let ignoreTypes = [
-                'connection',
-                'traffic',
-                'mode',
-                'nick',
-            ];
+            let ignoreTypes = ["connection", "traffic", "mode", "nick"];
             if (ignoreTypes.indexOf(message.type) > -1) {
                 return;
             }
@@ -48,7 +43,11 @@ export class AudioManager {
                 return;
             }
 
-            let shouldBleep = buffer.getNetwork().nick !== message.nick && ((message.isHighlight && buffer.setting('alert_on') === 'highlight') || buffer.setting('alert_on') === 'message');
+            let shouldBleep =
+                buffer.getNetwork().nick !== message.nick &&
+                ((message.isHighlight &&
+                    buffer.setting("alert_on") === "highlight") ||
+                    buffer.setting("alert_on") === "message");
             let isActiveBuffer = state.getActiveBuffer() === buffer;
             let inFocus = isActiveBuffer && state.ui.app_has_focus;
 

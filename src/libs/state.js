@@ -1,13 +1,13 @@
-'kiwi public';
+"kiwi public";
 
-import * as Misc from '@/helpers/Misc';
-import Vue from 'vue';
-import _ from 'lodash';
-import { configTemplates } from '@/res/configTemplates';
-import NetworkState from './state/NetworkState';
-import BufferState from './state/BufferState';
-import UserState from './state/UserState';
-import Message from './Message';
+import * as Misc from "@/helpers/Misc";
+import Vue from "vue";
+import _ from "lodash";
+import { configTemplates } from "@/res/configTemplates";
+import NetworkState from "./state/NetworkState";
+import BufferState from "./state/BufferState";
+import UserState from "./state/UserState";
+import Message from "./Message";
 
 const stateObj = {
     // May be set by a StatePersistence instance
@@ -15,16 +15,15 @@ const stateObj = {
 
     // Settings may be overridden via config.json
     settings: configTemplates.default,
-    user_settings: {
-    },
+    user_settings: {},
     connection: {
         // disconnected / connecting / connected
-        status: 'connected',
-        sessionId: '',
+        status: "connected",
+        sessionId: "",
     },
     ui: {
         active_network: 0,
-        active_buffer: '',
+        active_buffer: "",
         last_active_buffers: [],
         app_has_focus: true,
         app_width: 0,
@@ -32,7 +31,7 @@ const stateObj = {
         is_touch: false,
         is_narrow: false,
         favicon_counter: 0,
-        current_input: '',
+        current_input: "",
         input_history: [],
         input_history_pos: 0,
         show_advanced_tab: false,
@@ -47,11 +46,11 @@ const userDict = new Vue({
         };
     },
     /*
-    (network id): {
-        (lowercase nick): UserState,
-        (lowercase nick): UserState,
-    },
-    */
+  (network id): {
+      (lowercase nick): UserState,
+      (lowercase nick): UserState,
+  },
+  */
 });
 
 const bufferDict = new Vue({
@@ -61,23 +60,24 @@ const bufferDict = new Vue({
         };
     },
     /*
-    (network id): [
-        BufferState,
-        BufferState,
-    ]
-    */
+  (network id): [
+      BufferState,
+      BufferState,
+  ]
+  */
 });
 
-// Messages are seperate from the above state object to keep them from being reactive. Saves CPU.
+// Messages are seperate from the above state object to keep them from being
+// reactive. Saves CPU.
 const messages = [
     /* {
-        networkid: 1,
-        buffer: '#kiwiirc',
-        messages: [
-            Message,
-            Message
-        ],
-    }, */
+      networkid: 1,
+      buffer: '#kiwiirc',
+      messages: [
+          Message,
+          Message
+      ],
+  }, */
 ];
 
 const availableStartups = Object.create(null);
@@ -138,14 +138,23 @@ const state = new Vue({
             if (importObj && importObj.networks) {
                 this.resetState();
                 importObj.networks.forEach((importNetwork) => {
-                    let network = new NetworkState(importNetwork.id, state, userDict, bufferDict);
+                    let network = new NetworkState(
+                        importNetwork.id,
+                        state,
+                        userDict,
+                        bufferDict
+                    );
                     network.name = importNetwork.name;
-                    network.connection = { ...network.connection, ...importNetwork.connection };
-                    network.auto_commands = importNetwork.auto_commands || '';
+                    network.connection = {
+                        ...network.connection,
+                        ...importNetwork.connection,
+                    };
+                    network.auto_commands = importNetwork.auto_commands || "";
                     network.settings = importNetwork.settings;
                     // First check importNetwork.nick as this was used in older versions
                     // TODO: Eventually remove this importNetwork.nick check
-                    network.nick = importNetwork.nick || importNetwork.connection.nick;
+                    network.nick =
+                        importNetwork.nick || importNetwork.connection.nick;
                     if (!network.connection.nick && importNetwork.nick) {
                         network.connection.nick = importNetwork.nick;
                     }
@@ -156,7 +165,12 @@ const state = new Vue({
                     this.networks.push(network);
 
                     importNetwork.buffers.forEach((impBuffer) => {
-                        let buffer = new BufferState(impBuffer.name, network.id, state, messages);
+                        let buffer = new BufferState(
+                            impBuffer.name,
+                            network.id,
+                            state,
+                            messages
+                        );
                         buffer.key = impBuffer.key;
                         buffer.enabled = !!impBuffer.enabled;
                         buffer.settings = impBuffer.settings;
@@ -172,38 +186,39 @@ const state = new Vue({
         },
 
         resetState() {
-            this.$set(this.$data, 'user_settings', {});
-            this.$set(this.$data, 'networks', []);
+            this.$set(this.$data, "user_settings", {});
+            this.$set(this.$data, "networks", []);
             messages.splice(0);
         },
 
         setting(name, val) {
-            if (typeof val !== 'undefined') {
-                if (val === this.getSetting('settings.' + name)) {
+            if (typeof val !== "undefined") {
+                if (val === this.getSetting("settings." + name)) {
                     // Remove setting from user_settings if its the default
-                    return this.setSetting('user_settings.' + name, null);
+                    return this.setSetting("user_settings." + name, null);
                 }
                 // Setting any setting always goes into the user own settings space
-                return this.setSetting('user_settings.' + name, val);
+                return this.setSetting("user_settings." + name, val);
             }
 
             // Check the user specific settings before reverting to global settings
-            let userSetting = this.getSetting('user_settings.' + name);
-            let result = typeof userSetting !== 'undefined' ?
-                userSetting :
-                this.getSetting('settings.' + name);
+            let userSetting = this.getSetting("user_settings." + name);
+            let result =
+                typeof userSetting !== "undefined"
+                    ? userSetting
+                    : this.getSetting("settings." + name);
 
             return result;
         },
 
         // Accept 'dotted.notation' to read a state property of any depth
         getSetting(name) {
-            let parts = name.split('.');
+            let parts = name.split(".");
             let val = this.$data;
 
             for (let i = 0; i < parts.length; i++) {
                 val = val[parts[i]];
-                if (typeof val === 'undefined') {
+                if (typeof val === "undefined") {
                     break;
                 }
             }
@@ -213,14 +228,14 @@ const state = new Vue({
 
         // Accept 'dotted.notation' to set a state property of any depth
         setSetting(name, newVal) {
-            let parts = name.split('.');
+            let parts = name.split(".");
             let val = this.$data;
 
             for (let i = 0; i < parts.length; i++) {
                 let propName = parts[i];
                 let nextVal = val[propName];
 
-                if (i < parts.length - 1 && typeof nextVal === 'undefined') {
+                if (i < parts.length - 1 && typeof nextVal === "undefined") {
                     nextVal = this.$set(val, propName, {});
                 } else if (i === parts.length - 1) {
                     if (newVal === null) {
@@ -250,41 +265,49 @@ const state = new Vue({
 
         getNetworkFromAddress(netAddr) {
             return _.find(this.networks, (net) => {
-                let isMatch = netAddr.toLowerCase() === net.connection.server.toLowerCase();
+                let isMatch =
+                    netAddr.toLowerCase() ===
+                    net.connection.server.toLowerCase();
                 return isMatch;
             });
         },
 
         getNetworkFromBncNetId(bncnetid) {
-            return _.find(this.networks, (net) => bncnetid === net.connection.bncnetid);
+            return _.find(
+                this.networks,
+                (net) => bncnetid === net.connection.bncnetid
+            );
         },
 
         addNetwork(name, nick, serverInfo) {
             // Find the current largest ID and increment it by 1
             function networkidReduce(currentMax, network) {
-                return network.id > currentMax ?
-                    network.id :
-                    currentMax;
+                return network.id > currentMax ? network.id : currentMax;
             }
-            let networkid = serverInfo.channelId ?
-                parseInt(serverInfo.channelId, 10) :
-                _.reduce(this.networks, networkidReduce, 0) + 1;
+            let networkid = serverInfo.channelId
+                ? parseInt(serverInfo.channelId, 10)
+                : _.reduce(this.networks, networkidReduce, 0) + 1;
 
-            let network = new NetworkState(networkid, state, userDict, bufferDict);
+            let network = new NetworkState(
+                networkid,
+                state,
+                userDict,
+                bufferDict
+            );
             network.name = name;
             network.username = serverInfo.username;
             network.gecos = serverInfo.gecos;
-            network.password = serverInfo.account_password || '';
+            network.password = serverInfo.account_password || "";
             network.connection.password = serverInfo.password;
             network.connection.nick = nick;
-            network.connection.server = serverInfo.server || '';
+            network.connection.server = serverInfo.server || "";
             network.connection.port = serverInfo.port || 6667;
             network.connection.tls = serverInfo.tls || false;
-            network.connection.path = serverInfo.path || '';
+            network.connection.path = serverInfo.path || "";
             network.connection.direct = !!serverInfo.direct;
-            network.connection.path = serverInfo.path || '';
-            network.connection.encoding = serverInfo.encoding || 'utf8';
-            network.connection.bncnetid = serverInfo.bncnetid || '';
+            network.connection.path = serverInfo.path || "";
+            network.connection.encoding = serverInfo.encoding || "utf8";
+            network.connection.bncnetid = serverInfo.bncnetid || "";
 
             if (serverInfo.services) {
                 network.services = serverInfo.services;
@@ -293,10 +316,10 @@ const state = new Vue({
             this.networks.push(network);
 
             // Add the server server buffer
-            this.addBuffer(network.id, '*').joined = true;
+            this.addBuffer(network.id, "*").joined = true;
 
             let eventObj = { network };
-            state.$emit('network.new', eventObj);
+            state.$emit("network.new", eventObj);
 
             return network;
         },
@@ -307,7 +330,7 @@ const state = new Vue({
                 return;
             }
 
-            if (network.state === 'connected') {
+            if (network.state === "connected") {
                 network.ircClient.quit();
             }
 
@@ -328,28 +351,33 @@ const state = new Vue({
             }
 
             let eventObj = { network };
-            state.$emit('network.removed', eventObj);
+            state.$emit("network.removed", eventObj);
         },
 
         getActiveBuffer() {
-            return this.getBufferByName(this.ui.active_network, this.ui.active_buffer);
+            return this.getBufferByName(
+                this.ui.active_network,
+                this.ui.active_buffer
+            );
         },
 
         setActiveBuffer(networkid, bufferName) {
             if (!networkid) {
                 this.ui.active_network = 0;
-                this.ui.active_buffer = '';
+                this.ui.active_buffer = "";
             } else {
                 if (this.ui.active_network) {
-                    // Keep track of last 20 viewed buffers. When closing buffers we can go back to
-                    // one of the previous ones
+                    // Keep track of last 20 viewed buffers. When closing buffers we can
+                    // go back to one of the previous ones
                     this.ui.last_active_buffers.push({
                         networkid: this.ui.active_network,
                         bufferName: this.ui.active_buffer,
                     });
 
                     let lastActive = this.ui.last_active_buffers;
-                    this.ui.last_active_buffers = lastActive.splice(lastActive.length - 20);
+                    this.ui.last_active_buffers = lastActive.splice(
+                        lastActive.length - 20
+                    );
                 }
 
                 this.ui.active_network = networkid;
@@ -429,7 +457,10 @@ const state = new Vue({
             }
 
             let toMatch = bufferName.toLowerCase();
-            let buffer = _.find(network.buffers, (b) => b.name.toLowerCase() === toMatch);
+            let buffer = _.find(
+                network.buffers,
+                (b) => b.name.toLowerCase() === toMatch
+            );
 
             if (!buffer) {
                 buffer = this.addBuffer(networkid, bufferName);
@@ -449,7 +480,10 @@ const state = new Vue({
             }
 
             let toMatch = bufferName.toLowerCase();
-            let buffer = _.find(network.buffers, (b) => b.name.toLowerCase() === toMatch);
+            let buffer = _.find(
+                network.buffers,
+                (b) => b.name.toLowerCase() === toMatch
+            );
 
             return buffer;
         },
@@ -471,13 +505,13 @@ const state = new Vue({
             network.buffers.push(buffer);
 
             let eventObj = { buffer };
-            state.$emit('buffer.new', eventObj);
+            state.$emit("buffer.new", eventObj);
 
             return buffer;
         },
 
         removeBuffer(buffer) {
-            let isActiveBuffer = (this.getActiveBuffer() === buffer);
+            let isActiveBuffer = this.getActiveBuffer() === buffer;
 
             let network = this.getNetwork(buffer.networkid);
             if (!network) {
@@ -485,7 +519,7 @@ const state = new Vue({
             }
 
             let eventObj = { buffer };
-            state.$emit('buffer.close', eventObj);
+            state.$emit("buffer.close", eventObj);
 
             let bufferIdx = network.buffers.indexOf(buffer);
             if (bufferIdx > -1) {
@@ -506,7 +540,10 @@ const state = new Vue({
 
             // Remove the user from network state if no remaining common channels
             if (buffer.isQuery()) {
-                let remainingBuffers = state.getBuffersWithUser(network.id, buffer.name);
+                let remainingBuffers = state.getBuffersWithUser(
+                    network.id,
+                    buffer.name
+                );
                 if (remainingBuffers.length === 0) {
                     state.removeUser(network.d, {
                         nick: buffer.name,
@@ -527,8 +564,8 @@ const state = new Vue({
         },
 
         addMessage(buffer, message) {
-            // Some messages try to be added after a network has been removed, meaning no buffer
-            // will be available
+            // Some messages try to be added after a network has been removed, meaning
+            // no buffer will be available
             if (!buffer) {
                 return;
             }
@@ -543,41 +580,50 @@ const state = new Vue({
 
             // Increment the unread counter if this buffer is not active
             let includeAsActivity = false;
-            let typesForActivty = ['privmsg', 'action', 'notice', 'wallops'];
-            if (buffer.setting('traffic_as_activity') && message.type === 'traffic') {
-                typesForActivty.push('traffic');
+            let typesForActivty = ["privmsg", "action", "notice", "wallops"];
+            if (
+                buffer.setting("traffic_as_activity") &&
+                message.type === "traffic"
+            ) {
+                typesForActivty.push("traffic");
             }
 
             if (typesForActivty.indexOf(message.type) > -1) {
                 includeAsActivity = true;
             }
 
-            let isActiveBuffer = (
+            let isActiveBuffer =
                 buffer.networkid === this.ui.active_network &&
-                buffer.name === this.ui.active_buffer
-            );
+                buffer.name === this.ui.active_buffer;
 
             let network = buffer.getNetwork();
             let isNewMessage = message.time >= buffer.last_read;
-            let isHighlight = !network ?
-                false :
-                Misc.mentionsNick(bufferMessage.message, network.ircClient.user.nick);
+            let isHighlight = !network
+                ? false
+                : Misc.mentionsNick(
+                      bufferMessage.message,
+                      network.ircClient.user.nick
+                  );
 
             // Check for extra custom highlight words
-            let extraHighlights = (state.setting('highlights') || '').toLowerCase().split(' ');
+            let extraHighlights = (state.setting("highlights") || "")
+                .toLowerCase()
+                .split(" ");
             if (!isHighlight && extraHighlights.length > 0) {
                 extraHighlights.forEach((word) => {
                     if (!word) {
                         return;
                     }
 
-                    if (bufferMessage.message.toLowerCase().indexOf(word) > -1) {
+                    if (
+                        bufferMessage.message.toLowerCase().indexOf(word) > -1
+                    ) {
                         isHighlight = true;
                     }
                 });
             }
 
-            if (state.setting('teamHighlights')) {
+            if (state.setting("teamHighlights")) {
                 let m = bufferMessage.message;
                 let patterns = {
                     everyone: /(^|\s)@everybody($|\s|[,.;])/,
@@ -600,43 +646,49 @@ const state = new Vue({
             }
 
             // Handle buffer flags
-            if (isNewMessage && includeAsActivity && !isActiveBuffer && !bufferMessage.ignore) {
-                buffer.incrementFlag('unread');
+            if (
+                isNewMessage &&
+                includeAsActivity &&
+                !isActiveBuffer &&
+                !bufferMessage.ignore
+            ) {
+                buffer.incrementFlag("unread");
                 if (isHighlight) {
-                    buffer.flag('highlight', true);
+                    buffer.flag("highlight", true);
                 }
             }
 
             // Handle any notifications
-            let settingAlertOn = buffer.setting('alert_on');
+            let settingAlertOn = buffer.setting("alert_on");
             let isSelf = !network ? false : message.nick === network.nick;
             if (
                 isNewMessage &&
-                settingAlertOn !== 'never' &&
-                message.type !== 'nick' &&
-                message.type !== 'mode' &&
-                message.type !== 'traffic' &&
+                settingAlertOn !== "never" &&
+                message.type !== "nick" &&
+                message.type !== "mode" &&
+                message.type !== "traffic" &&
                 !buffer.isSpecial() &&
                 !bufferMessage.ignore &&
                 !isSelf
             ) {
-                let notifyTitle = '';
-                let notifyMessage = message.nick ?
-                    message.nick + ': ' :
-                    '';
+                let notifyTitle = "";
+                let notifyMessage = message.nick ? message.nick + ": " : "";
                 notifyMessage += message.message;
 
                 if (isHighlight) {
-                    notifyTitle = 'You were mentioned in ' + buffer.name;
-                } else if (settingAlertOn === 'message' && !isHighlight) {
+                    notifyTitle = "You were mentioned in " + buffer.name;
+                } else if (settingAlertOn === "message" && !isHighlight) {
                     notifyTitle = buffer.name;
                 }
 
                 if (notifyTitle) {
-                    this.$emit('notification.show', notifyMessage, {
+                    this.$emit("notification.show", notifyMessage, {
                         title: notifyTitle,
                         onclick: () => {
-                            state.setActiveBuffer(buffer.networkid, buffer.name);
+                            state.setActiveBuffer(
+                                buffer.networkid,
+                                buffer.name
+                            );
 
                             // Newer webkit browser use parent.focus() while older webkit uses
                             // window.focus()
@@ -655,16 +707,15 @@ const state = new Vue({
             if (
                 isActiveBuffer &&
                 !state.ui.app_has_focus &&
-                message.type !== 'traffic' &&
-                (
-                    (buffer.setting('flash_title') === 'message') ||
-                    (buffer.setting('flash_title') === 'highlight' && isHighlight)
-                )
+                message.type !== "traffic" &&
+                (buffer.setting("flash_title") === "message" ||
+                    (buffer.setting("flash_title") === "highlight" &&
+                        isHighlight))
             ) {
-                this.$emit('notification.title', true);
+                this.$emit("notification.title", true);
             }
 
-            this.$emit('message.new', { message: bufferMessage, buffer });
+            this.$emit("message.new", { message: bufferMessage, buffer });
         },
 
         getUser(networkid, nick, usersArr_) {
@@ -685,7 +736,8 @@ const state = new Vue({
             return user;
         },
 
-        // Modify a networks user array without hitting vues reactive system until fn()
+        // Modify a networks user array without hitting vues reactive system until
+        // fn()
         // has completed. Good for making large changes in bulk
         usersTransaction(networkid, fn) {
             let network = this.getNetwork(networkid);
@@ -702,7 +754,7 @@ const state = new Vue({
             let network = null;
 
             // Accept either a network ID or a direct network object
-            if (typeof networkid === 'number') {
+            if (typeof networkid === "number") {
                 network = this.getNetwork(networkid);
             } else {
                 network = networkid;
@@ -716,12 +768,14 @@ const state = new Vue({
             let userObj = null;
 
             if (!usersArr[user.nick.toLowerCase()]) {
-                userObj = usersArr[user.nick.toLowerCase()] = new UserState(user);
+                userObj = usersArr[user.nick.toLowerCase()] = new UserState(
+                    user
+                );
             } else {
                 // Update the existing user object with any new info we have
                 userObj = state.getUser(network.id, user.nick, usersArr);
                 _.each(user, (val, prop) => {
-                    if (typeof val !== 'undefined') {
+                    if (typeof val !== "undefined") {
                         userObj[prop] = val;
                     }
                 });
@@ -798,7 +852,7 @@ const state = new Vue({
                     buffer: buffer,
                 });
             } else {
-                state.$set(userObj.buffers[buffer.id], 'modes', modes || []);
+                state.$set(userObj.buffers[buffer.id], "modes", modes || []);
             }
         },
 
@@ -815,7 +869,10 @@ const state = new Vue({
             let normalisedNick = nick.toLowerCase();
             let buffers = [];
             network.buffers.forEach((buffer) => {
-                if (buffer.users[normalisedNick] || normalisedNick === buffer.name.toLowerCase()) {
+                if (
+                    buffer.users[normalisedNick] ||
+                    normalisedNick === buffer.name.toLowerCase()
+                ) {
                     buffers.push(buffer);
                 } else if (nick === network.nick && buffer.isQuery()) {
                     buffers.push(buffer);
@@ -841,15 +898,23 @@ const state = new Vue({
 
             user.nick = newNick;
 
-            // If the nick has completely changed (ie. not just a case change) then update all
-            // associated buffers user lists
+            // If the nick has completely changed (ie. not just a case change) then
+            // update all associated buffers user lists
             if (normalisedOld !== normalisedNew) {
-                state.$set(network.users, normalisedNew, network.users[normalisedOld]);
+                state.$set(
+                    network.users,
+                    normalisedNew,
+                    network.users[normalisedOld]
+                );
                 state.$delete(network.users, normalisedOld);
 
                 Object.keys(user.buffers).forEach((bufferId) => {
                     let buffer = user.buffers[bufferId].buffer;
-                    state.$set(buffer.users, normalisedNew, buffer.users[normalisedOld]);
+                    state.$set(
+                        buffer.users,
+                        normalisedNew,
+                        buffer.users[normalisedOld]
+                    );
                     state.$delete(buffer.users, normalisedOld);
                 });
             }

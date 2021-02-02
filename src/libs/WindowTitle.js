@@ -1,7 +1,7 @@
 export default class WindowTitle {
     constructor(state) {
         this.state = state;
-        this.title = state.settings.windowTitle || '';
+        this.title = state.settings.windowTitle || "";
         this.alert = false;
 
         // Update the window title if we have one
@@ -9,17 +9,17 @@ export default class WindowTitle {
             this.updateTitle();
         }
 
-        state.$watch('settings.windowTitle', (newVal) => {
+        state.$watch("settings.windowTitle", (newVal) => {
             this.updateTitle(newVal);
         });
 
-        state.$watch('ui.app_has_focus', (newVal) => {
+        state.$watch("ui.app_has_focus", (newVal) => {
             if (newVal && this.alertTmr) {
                 this.stopAlert();
             }
         });
 
-        state.$on('notification.title', (enable) => {
+        state.$on("notification.title", (enable) => {
             if (enable) {
                 this.startAlert();
             } else {
@@ -48,12 +48,12 @@ export default class WindowTitle {
     }
 
     updateTitle(newTitle) {
-        if (typeof newTitle === 'string') {
+        if (typeof newTitle === "string") {
             this.title = newTitle;
         }
 
         if (this.alertTmr && !this.alert) {
-            window.document.title = '* ' + this.title;
+            window.document.title = "* " + this.title;
             this.alert = true;
         } else {
             window.document.title = this.title;

@@ -1,63 +1,65 @@
 /** @module */
 
-import Vue from 'vue';
-import { def } from './common';
-import * as IrcClient from '../IrcClient';
+import Vue from "vue";
+
+import * as IrcClient from "../IrcClient";
+
+import { def } from "./common";
 
 /** The IRC network instance */
 export default class NetworkState {
     constructor(id, appState, userDict, bufferDict) {
         // Enumerable properties that become reactive under Vue
         this.id = id;
-        this.name = '';
+        this.name = "";
         // State of the transport
-        this.state = 'disconnected';
-        this.state_error = '';
+        this.state = "disconnected";
+        this.state_error = "";
         // Last error from the IRC server. Resets on reconnect
-        this.last_error = '';
-        this.auto_commands = '';
+        this.last_error = "";
+        this.auto_commands = "";
         this.is_znc = false;
         this.hidden = false;
         this.channel_list = [];
-        this.channel_list_state = '';
+        this.channel_list_state = "";
         // The IRCd type as mentioned in the 002 numeric
-        this.ircd = '';
+        this.ircd = "";
         this.connection = {
-            server: '',
+            server: "",
             port: 6667,
             tls: false,
-            path: '',
+            path: "",
             // Server password
-            password: '',
+            password: "",
             direct: false,
-            encoding: 'utf8',
-            bncnetid: '',
-            nick: '',
+            encoding: "utf8",
+            bncnetid: "",
+            nick: "",
         };
         this.settings = {
             show_raw_caps: false,
         };
-        this.nick = '';
-        this.username = '';
-        this.gecos = '';
+        this.nick = "";
+        this.username = "";
+        this.gecos = "";
         // SASL password
-        this.password = '';
-        this.away = '';
+        this.password = "";
+        this.away = "";
 
         Vue.observable(this);
 
         // Some non-enumerable properties (vues $watch won't cover these properties)
-        def(this, 'appState', appState, false);
-        def(this, 'userDict', userDict, false);
-        def(this, 'bufferDict', bufferDict, false);
-        def(this, 'frameworkClient', null, true);
+        def(this, "appState", appState, false);
+        def(this, "userDict", userDict, false);
+        def(this, "bufferDict", bufferDict, false);
+        def(this, "frameworkClient", null, true);
 
-        def(this, 'users', Object.create(null), (newVal) => {
+        def(this, "users", Object.create(null), (newVal) => {
             appState.$set(userDict.networks, this.id, newVal);
         });
 
         // Pending prviate messages awaiting whois operator check
-        def(this, 'pendingPms', [], false);
+        def(this, "pendingPms", [], false);
 
         bufferDict.$set(bufferDict.networks, this.id, []);
     }
@@ -83,11 +85,11 @@ export default class NetworkState {
     }
 
     serverBuffer() {
-        return this.appState.getBufferByName(this.id, '*');
+        return this.appState.getBufferByName(this.id, "*");
     }
 
     setting(name, val) {
-        if (typeof val !== 'undefined') {
+        if (typeof val !== "undefined") {
             this.appState.$set(this.settings, name, val);
             return val;
         }
@@ -96,21 +98,21 @@ export default class NetworkState {
     }
 
     isChannelName(input) {
-        if (typeof input !== 'string' || !input) {
+        if (typeof input !== "string" || !input) {
             return false;
         }
 
-        let chanPrefixes = this.ircClient.network.supports('CHANTYPES') || '#&';
+        let chanPrefixes = this.ircClient.network.supports("CHANTYPES") || "#&";
         return chanPrefixes.indexOf(input[0]) > -1;
     }
 
     showServerBuffer(tabName) {
-        this.appState.$emit('active.component', null);
+        this.appState.$emit("active.component", null);
         this.appState.setActiveBuffer(this.id, this.serverBuffer().name);
         // Hacky, but the server buffer component listens for events to switch
         // between tabs
         setImmediate(() => {
-            this.appState.$emit('server.tab.show', tabName || 'settings');
+            this.appState.$emit("server.tab.show", tabName || "settings");
         });
     }
 

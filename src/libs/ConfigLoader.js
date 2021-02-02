@@ -1,11 +1,11 @@
-'kiwi public';
+"kiwi public";
 
-import xhr from 'xhr';
-import _ from 'lodash';
-import JSON5 from 'json5';
-import Logger from './Logger';
+import xhr from "xhr";
+import _ from "lodash";
+import JSON5 from "json5";
+import Logger from "./Logger";
 
-let log = Logger.namespace('ConfigLoader');
+let log = Logger.namespace("ConfigLoader");
 
 export default class ConfigLoader {
     constructor() {
@@ -30,8 +30,10 @@ export default class ConfigLoader {
                 try {
                     configObj = JSON5.parse(response.body);
                 } catch (parseErr) {
-                    log.error('Config ' + parseErr.message);
-                    let errMsg = 'Config file error: ' + parseErr.message.replace('JSON5: ', '');
+                    log.error("Config " + parseErr.message);
+                    let errMsg =
+                        "Config file error: " +
+                        parseErr.message.replace("JSON5: ", "");
                     // Convert "at 22:16" to "at line 22, position 16"
                     /* eslint-disable arrow-body-style */
                     errMsg = errMsg.replace(/at (\d+):(\d+)/g, (m, m1, m2) => {
@@ -58,13 +60,11 @@ export default class ConfigLoader {
         let walkObject = (obj, target) => {
             _.each(obj, (_val, key) => {
                 let val = _val;
-                if (typeof val === 'string') {
+                if (typeof val === "string") {
                     val = this.insertReplacements(val);
                     target[key] = val;
-                } else if (typeof val === 'object') {
-                    target[key] = _.isArray(val) ?
-                        [] :
-                        {};
+                } else if (typeof val === "object") {
+                    target[key] = _.isArray(val) ? [] : {};
                     walkObject(val, target[key]);
                 } else {
                     target[key] = val;
@@ -79,7 +79,7 @@ export default class ConfigLoader {
     insertReplacements(input) {
         let out = input;
         Object.keys(this.valReplacements).forEach((k) => {
-            out = out.replace('{{' + k + '}}', this.valReplacements[k]);
+            out = out.replace("{{" + k + "}}", this.valReplacements[k]);
         });
         return out;
     }

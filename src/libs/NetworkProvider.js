@@ -1,6 +1,6 @@
-'kiwi public';
+"kiwi public";
 
-import eventEmitter from 'event-emitter';
+import eventEmitter from "event-emitter";
 
 export default class NetworkProvider {
     constructor() {
@@ -10,8 +10,8 @@ export default class NetworkProvider {
 
     addProvider(provider) {
         this.providers.push(provider);
-        provider.on('networks', (networks) => {
-            this.emit('networks', this.availableNetworks());
+        provider.on("networks", (networks) => {
+            this.emit("networks", this.availableNetworks());
         });
     }
 

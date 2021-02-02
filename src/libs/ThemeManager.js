@@ -1,6 +1,6 @@
-'kiwi public';
+"kiwi public";
 
-import _ from 'lodash';
+import _ from "lodash";
 
 let createdInstance = null;
 
@@ -13,12 +13,12 @@ export default class ThemeManager {
 
     themeVar(varName) {
         if (!this.varsEl) {
-            this.varsEl = document.querySelector('.kiwi-wrap');
+            this.varsEl = document.querySelector(".kiwi-wrap");
         }
 
         let styles = window.getComputedStyle(this.varsEl);
-        let v = styles.getPropertyValue('--kiwi-' + varName);
-        return (v || '').trim();
+        let v = styles.getPropertyValue("--kiwi-" + varName);
+        return (v || "").trim();
     }
 
     availableThemes() {
@@ -27,7 +27,7 @@ export default class ThemeManager {
 
     currentTheme() {
         let state = this.state;
-        let currentThemeName = state.setting('theme');
+        let currentThemeName = state.setting("theme");
         currentThemeName = currentThemeName.toLowerCase();
 
         let theme = _.find(state.settings.themes, (t) => {
@@ -46,7 +46,7 @@ export default class ThemeManager {
     setTheme(theme) {
         let theTheme = null;
 
-        if (typeof theme === 'string') {
+        if (typeof theme === "string") {
             // Make sure this theme exists
             theTheme = _.find(this.availableThemes(), (t) => {
                 let isMatch = t.name.toLowerCase() === theme.toLowerCase();
@@ -60,8 +60,8 @@ export default class ThemeManager {
             theTheme = theme;
         }
 
-        this.state.setting('theme', theTheme.name);
-        this.state.$emit('theme.change');
+        this.state.setting("theme", theTheme.name);
+        this.state.$emit("theme.change");
     }
 
     reload() {
@@ -71,48 +71,52 @@ export default class ThemeManager {
         }
 
         let url = theme.url;
-        if (url.indexOf('cb=') > -1) {
-            url = url.replace(/cb=[0-9]+/, () => 'cb=' + Date.now());
-        } else if (url.indexOf('?') > -1) {
-            url += '&cb=' + Date.now();
+        if (url.indexOf("cb=") > -1) {
+            url = url.replace(/cb=[0-9]+/, () => "cb=" + Date.now());
+        } else if (url.indexOf("?") > -1) {
+            url += "&cb=" + Date.now();
         } else {
-            url += '?cb=' + Date.now();
+            url += "?cb=" + Date.now();
         }
 
         theme.url = url;
-        this.state.$emit('theme.change');
+        this.state.$emit("theme.change");
     }
 
     static themeUrl(theme) {
-        let parts = theme.url.split('?');
+        let parts = theme.url.split("?");
         let url = parts[0];
-        let qs = parts[1] || '';
+        let qs = parts[1] || "";
 
-        if (url[url.length - 1] !== '/') {
-            url += '/';
+        if (url[url.length - 1] !== "/") {
+            url += "/";
         }
-        return url + 'theme.css' + (qs ? '?' + qs : '');
+        return url + "theme.css" + (qs ? "?" + qs : "");
     }
 
     setCustomThemeUrl(url) {
         let theme = _.find(ThemeManager.instance().availableThemes(), {
-            name: 'custom',
+            name: "custom",
         });
 
         if (theme) {
             theme.url = url;
         }
 
-        if (theme.name === 'custom') {
-            this.state.$emit('theme.change');
+        if (theme.name === "custom") {
+            this.state.$emit("theme.change");
         }
     }
 
-    // When we get a CTCP 'kiwi theme reload' then reload our theme. Handy for theme devs
+    // When we get a CTCP 'kiwi theme reload' then reload our theme. Handy for
+    // theme devs
     listenForIrcEvents() {
-        this.state.$on('irc.ctcp request', (event, network) => {
-            let ctcpType = (event.type || '').toLowerCase();
-            if (ctcpType === 'kiwi' && event.message.indexOf('theme reload') > -1) {
+        this.state.$on("irc.ctcp request", (event, network) => {
+            let ctcpType = (event.type || "").toLowerCase();
+            if (
+                ctcpType === "kiwi" &&
+                event.message.indexOf("theme reload") > -1
+            ) {
                 this.reload();
             }
         });

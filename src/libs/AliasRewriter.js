@@ -1,4 +1,4 @@
-'kiwi public';
+"kiwi public";
 
 /** @module */
 
@@ -24,17 +24,20 @@ export default class AliasRewriter {
         this.aliases = {};
     }
 
-    /** Reset the current aliases object from a newline delimited string of aliases */
+    /**
+     * Reset the current aliases object from a newline delimited string of
+     * aliases
+     */
     importFromString(str) {
         // Clear out the current aliases before adding new ones in
         this.aliases = {};
 
-        str.split('\n').forEach((line) => {
-            if (line[0] !== '/') {
+        str.split("\n").forEach((line) => {
+            if (line[0] !== "/") {
                 return;
             }
 
-            let spaceSep = line.indexOf(' ');
+            let spaceSep = line.indexOf(" ");
             if (spaceSep === -1) {
                 return;
             }
@@ -54,7 +57,7 @@ export default class AliasRewriter {
         let words = input || [];
         let alias = this.aliases[words[0].toLowerCase()];
         let aliasLen;
-        let currentAliasWord = '';
+        let currentAliasWord = "";
         let currentAliasWordLen = 0;
         let processedConditionals = false;
         let compiled = [];
@@ -63,7 +66,7 @@ export default class AliasRewriter {
         if (!alias) return input;
 
         // Split the alias up into useable words
-        alias = alias.split(' ');
+        alias = alias.split(" ");
         aliasLen = alias.length;
 
         // Iterate over each word and pop them into the final compiled array.
@@ -75,9 +78,13 @@ export default class AliasRewriter {
             // $var? word makes this command only run if the var exists
             if (
                 !processedConditionals &&
-                currentAliasWord[0] === '$' && currentAliasWord[currentAliasWordLen - 1] === '?'
+                currentAliasWord[0] === "$" &&
+                currentAliasWord[currentAliasWordLen - 1] === "?"
             ) {
-                let checkVar = currentAliasWord.substr(1, currentAliasWordLen - 2);
+                let checkVar = currentAliasWord.substr(
+                    1,
+                    currentAliasWordLen - 2
+                );
                 if (!vars[checkVar]) {
                     compiled = [];
                     break;
@@ -89,27 +96,31 @@ export default class AliasRewriter {
             }
 
             // Non $ word
-            if (currentAliasWord[0] !== '$') {
+            if (currentAliasWord[0] !== "$") {
                 compiled.push(currentAliasWord);
                 continue;
             }
 
             // Refering to an input word ($N)
-            if ((currentAliasWord[1] || '').match(/\d/)) {
+            if ((currentAliasWord[1] || "").match(/\d/)) {
                 let num = currentAliasWord.match(/\$(\d+)(\+)?(\d+)?/);
 
                 // Did we find anything or does the word it refers to non-existant?
                 if (!num || !words[num[1]]) continue;
 
-                if (num[2] === '+' && num[3]) {
+                if (num[2] === "+" && num[3]) {
                     // Add X number of words
-                    compiled = compiled.concat(words.slice(
-                        parseInt(num[1], 10),
-                        parseInt(num[1], 10) + parseInt(num[3], 10)
-                    ));
-                } else if (num[2] === '+') {
+                    compiled = compiled.concat(
+                        words.slice(
+                            parseInt(num[1], 10),
+                            parseInt(num[1], 10) + parseInt(num[3], 10)
+                        )
+                    );
+                } else if (num[2] === "+") {
                     // Add the remaining of the words
-                    compiled = compiled.concat(words.slice(parseInt(num[1], 10)));
+                    compiled = compiled.concat(
+                        words.slice(parseInt(num[1], 10))
+                    );
                 } else {
                     // Add a single word
                     compiled.push(words[parseInt(num[1], 10)]);
@@ -119,7 +130,7 @@ export default class AliasRewriter {
             }
 
             // Refering to a variable
-            if (typeof vars[currentAliasWord.substr(1)] !== 'undefined') {
+            if (typeof vars[currentAliasWord.substr(1)] !== "undefined") {
                 // Get the variable
                 compiled.push(vars[currentAliasWord.substr(1)]);
 
@@ -130,11 +141,13 @@ export default class AliasRewriter {
         return compiled;
     }
 
-    /** Take a string input, process any aliases and output the finalised string */
+    /**
+     * Take a string input, process any aliases and output the finalised string
+     */
     process(input, vars) {
-        let line = input || '';
-        let words = line.split(' ');
-        let firstWord = (words[0] || '').toLowerCase();
+        let line = input || "";
+        let words = line.split(" ");
+        let firstWord = (words[0] || "").toLowerCase();
 
         this.depth++;
         if (this.depth >= this.recursiveDepth) {
@@ -144,14 +157,14 @@ export default class AliasRewriter {
 
         if (this.aliases[firstWord]) {
             words = this.processInput(words, vars);
-            firstWord = (words[0] || '').toLowerCase();
+            firstWord = (words[0] || "").toLowerCase();
 
             if (this.aliases[firstWord]) {
-                words = this.process(words.join(' '), vars).split(' ');
+                words = this.process(words.join(" "), vars).split(" ");
             }
         }
 
         this.depth--;
-        return words.join(' ');
+        return words.join(" ");
     }
 }

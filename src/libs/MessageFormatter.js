@@ -1,4 +1,4 @@
-'kiwi public';
+"kiwi public";
 
 const tokens = Object.create(null);
 
@@ -10,8 +10,8 @@ const tokens = Object.create(null);
  */
 
 /* eslint-disable dot-notation */
-tokens['_'] = {
-    token: '_',
+tokens["_"] = {
+    token: "_",
     extra: true,
     fn: function parseToken(inp, pos, block, prevBlock, openToks) {
         if (openToks[this.token]) {
@@ -27,7 +27,7 @@ tokens['_'] = {
         }
 
         // Underscores may be part of a word or URL so consider it an opening
-        if (pos > 0 && inp[pos - 1] !== ' ') {
+        if (pos > 0 && inp[pos - 1] !== " ") {
             return -1;
         }
 
@@ -44,8 +44,8 @@ tokens['_'] = {
         return null;
     },
 };
-tokens['*'] = {
-    token: '*',
+tokens["*"] = {
+    token: "*",
     extra: true,
     fn: function parseToken(inp, pos, block, prevBlock, openToks) {
         if (openToks[this.token]) {
@@ -61,13 +61,13 @@ tokens['*'] = {
         }
 
         // Ignore is after a : character. :* is usually a kiss emoji
-        if (inp[pos - 1] === ':') {
+        if (inp[pos - 1] === ":") {
             return -1;
         }
 
-        // * may be part of a word (ie. pasting code) or URL so only start bolding if * is after a
-        // space
-        if (pos > 0 && inp[pos - 1] !== ' ') {
+        // * may be part of a word (ie. pasting code) or URL so only start bolding
+        // if * is after a space
+        if (pos > 0 && inp[pos - 1] !== " ") {
             return -1;
         }
 
@@ -78,7 +78,8 @@ tokens['*'] = {
         let nextPos = remainingText.indexOf(this.token);
         if (
             nextPos === -1 ||
-            (nextPos < remainingText.length - 1 && remainingText[nextPos + 1] !== ' ')
+            (nextPos < remainingText.length - 1 &&
+                remainingText[nextPos + 1] !== " ")
         ) {
             return -1;
         }
@@ -90,8 +91,8 @@ tokens['*'] = {
         return null;
     },
 };
-tokens['**'] = {
-    token: '**',
+tokens["**"] = {
+    token: "**",
     extra: true,
     fn: function parseToken(inp, pos, block, prevBlock, openToks) {
         if (openToks[this.token]) {
@@ -118,8 +119,8 @@ tokens['**'] = {
         return null;
     },
 };
-tokens['`'] = {
-    token: '`',
+tokens["`"] = {
+    token: "`",
     extra: true,
     fn: function parseToken(inp, pos, block, prevBlock, openToks) {
         if (openToks[this.token]) {
@@ -129,9 +130,9 @@ tokens['`'] = {
             return null;
         }
 
-        // Backticks may be part of a word or NICK so only consider it a codeblock if
-        // it's at the start of a scentence or comes after a space
-        if (pos > 0 && inp[pos - 1] !== ' ') {
+        // Backticks may be part of a word or NICK so only consider it a codeblock
+        // if it's at the start of a scentence or comes after a space
+        if (pos > 0 && inp[pos - 1] !== " ") {
             return -1;
         }
 
@@ -139,15 +140,17 @@ tokens['`'] = {
         let str = inp.substr(pos + 1);
         let endPos = str.indexOf(this.token);
 
-        // If we don't have a closing backtick further on, don't take this as an opening backtick
+        // If we don't have a closing backtick further on, don't take this as an
+        // opening backtick
         if (endPos === -1) {
             return -1;
         }
 
-        // Only consider the found closing backtick as closing if it comes before a space or is at
-        // the end of the text. If it's in the middle of text then it's highly lickely part of that
-        // text and not actually closing. eg. `hello and wel`come
-        if (str[endPos + 1] && str[endPos + 1] !== ' ') {
+        // Only consider the found closing backtick as closing if it comes before a
+        // space or is at the end of the text. If it's in the middle of text then
+        // it's highly lickely part of that text and not actually closing. eg.
+        // `hello and wel`come
+        if (str[endPos + 1] && str[endPos + 1] !== " ") {
             return -1;
         }
 
@@ -164,8 +167,8 @@ tokens['`'] = {
     },
 };
 
-tokens['\x02'] = {
-    token: '\x02',
+tokens["\x02"] = {
+    token: "\x02",
     extra: false,
     fn: function parseToken(inp, pos, block, prevBlock, openToks) {
         if (openToks[this.token]) {
@@ -180,8 +183,8 @@ tokens['\x02'] = {
     },
 };
 
-tokens['\x1D'] = {
-    token: '\x1D',
+tokens["\x1D"] = {
+    token: "\x1D",
     extra: false,
     fn: function parseToken(inp, pos, block, prevBlock, openToks) {
         if (openToks[this.token]) {
@@ -196,8 +199,8 @@ tokens['\x1D'] = {
     },
 };
 
-tokens['\x1F'] = {
-    token: '\x1F',
+tokens["\x1F"] = {
+    token: "\x1F",
     extra: false,
     fn: function parseToken(inp, pos, block, prevBlock, openToks) {
         if (openToks[this.token]) {
@@ -213,8 +216,8 @@ tokens['\x1F'] = {
 };
 
 // Clear all styles
-tokens['\x0F'] = {
-    token: '\x0F',
+tokens["\x0F"] = {
+    token: "\x0F",
     extra: false,
     fn: function parseToken(inp, pos, block, prevBlock, openToks) {
         Object.keys(block.styles).forEach((k) => delete block.styles[k]);
@@ -225,27 +228,27 @@ tokens['\x0F'] = {
 };
 
 // Colours
-tokens['\x03'] = {
-    token: '\x03',
+tokens["\x03"] = {
+    token: "\x03",
     extra: false,
     fn: function parseToken(inp, pos, block, prevBlock, openToks) {
         let colours = {
-            0: 'white',
-            1: 'black',
-            2: 'blue',
-            3: 'green',
-            4: 'light-red',
-            5: 'brown',
-            6: 'purple',
-            7: 'orange',
-            8: 'yellow',
-            9: 'light-green',
-            10: 'cyan',
-            11: 'light-cyan',
-            12: 'light-blue',
-            13: 'pink',
-            14: 'grey',
-            15: 'light-grey',
+            0: "white",
+            1: "black",
+            2: "blue",
+            3: "green",
+            4: "light-red",
+            5: "brown",
+            6: "purple",
+            7: "orange",
+            8: "yellow",
+            9: "light-green",
+            10: "cyan",
+            11: "light-cyan",
+            12: "light-blue",
+            13: "pink",
+            14: "grey",
+            15: "light-grey",
         };
 
         let colourMatchRegexp = /^\x03(([0-9][0-9]?)(,([0-9][0-9]?))?)/;
@@ -254,10 +257,10 @@ tokens['\x03'] = {
             // fg colour = 2, bg colour = 4
             let fgColour = colours[parseInt(match[2], 10)];
             let bgColour = colours[parseInt(match[4], 10)];
-            if (typeof fgColour !== 'undefined') {
+            if (typeof fgColour !== "undefined") {
                 block.styles.color = fgColour;
             }
-            if (typeof bgColour !== 'undefined') {
+            if (typeof bgColour !== "undefined") {
                 block.styles.background = bgColour;
             }
 
@@ -294,8 +297,9 @@ export default function parse(inp, _opts) {
 
         let newBlock = null;
 
-        // Consecutive tokens can stack up styles into the same blocks. A consecutive
-        // token means that the block before it will not have any content yet
+        // Consecutive tokens can stack up styles into the same blocks. A
+        // consecutive token means that the block before it will not have any
+        // content yet
         if (block.containsContent) {
             newBlock = createNewBlock();
         } else {
@@ -320,7 +324,7 @@ export default function parse(inp, _opts) {
             blocks.push(newBlock);
         }
 
-        if (typeof newPos === 'number') {
+        if (typeof newPos === "number") {
             pos = newPos;
         } else {
             pos += tok.token.length;
@@ -336,9 +340,9 @@ export default function parse(inp, _opts) {
 }
 
 export function createNewBlock(
-    content = '',
+    content = "",
     styles = {},
-    type = 'text',
+    type = "text",
     meta = {}
 ) {
     const newBlock = {

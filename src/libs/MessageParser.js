@@ -1,26 +1,30 @@
-'kiwi public';
+"kiwi public";
 
-import { trim } from 'lodash';
+import { trim } from "lodash";
 
-import state from '@/libs/state';
-import formatIrcMessage, { createNewBlock } from '@/libs/MessageFormatter';
-import { urlRegex, channelRegex } from '@/helpers/TextFormatting';
+import state from "@/libs/state";
+import formatIrcMessage, { createNewBlock } from "@/libs/MessageFormatter";
+import { urlRegex, channelRegex } from "@/helpers/TextFormatting";
 
 /**
- * Receives a message, parses its irc blocks, and then finds urls, users, channels and emoji. Each
- * content is extracted to a separate block.
- * E.g. the message:
- *   "this is a message www.google.com and #kiwiirc"
- * will be split into the blocks:
+ * Receives a message, parses its irc blocks, and then finds urls, users,
+ * channels and emoji. Each content is extracted to a separate block. E.g. the
+ * message: "this is a message www.google.com and #kiwiirc" will be split into
+ * the blocks:
  *   ["this is a message "]["www.google.com"][" and "]["#kiwiirc"]
- * The special content blocks will also contain additional info about their content according to
- * their type, such as the url, nick colour, emoji code...
+ * The special content blocks will also contain additional info about their
+ * content according to their type, such as the url, nick colour, emoji code...
  * @param {Array} blocks Array of style blocks from MessageFormatter
  * @param {Array} userList List of users to find within the message
- * @returns An array of blocks, where each special content will be extracted into a separate block.
+ * @returns An array of blocks, where each special content will be extracted
+ *     into a separate block.
  */
-export default function parseMessage(message, formatOpts = {}, userList = null) {
-    const emojiList = state.setting('emojis');
+export default function parseMessage(
+    message,
+    formatOpts = {},
+    userList = null
+) {
+    const emojiList = state.setting("emojis");
 
     const blocks = formatIrcMessage(message, formatOpts);
     let formatedBlocks = blocks.reduce(
@@ -32,11 +36,14 @@ export default function parseMessage(message, formatOpts = {}, userList = null) 
 }
 
 /**
- * Receives a block, splits it into words and tries finding channels, urls, nicks, and emoji.
- * @param {Object} block A block that came from MessageFormatter.formatIrcMessage()
+ * Receives a block, splits it into words and tries finding channels, urls,
+ * nicks, and emoji.
+ * @param {Object} block A block that came from
+ *     MessageFormatter.formatIrcMessage()
  * @param {Object} userList List of users to find within the message
  * @param {Object} emojiList List of emoji to find within the message
- * @returns An array of blocks, where each special content will be extracted into a separate block.
+ * @returns An array of blocks, where each special content will be extracted
+ *     into a separate block.
  */
 function processBlock(block, userList, emojiList) {
     const wordsRegex = /\S+/g;
@@ -44,7 +51,8 @@ function processBlock(block, userList, emojiList) {
     let wordMatch;
     let word;
     const specialMatches = [];
-    // Array containing the special matches. Each `specialMatch` is an object with:
+    // Array containing the special matches. Each `specialMatch` is an object
+    // with:
     // {
     //    index: <index of the match>
     //    match: <match, i.e. the text that will be extracted into a new block>
@@ -53,8 +61,8 @@ function processBlock(block, userList, emojiList) {
 
     // eslint-disable-next-line no-cond-assign
     while ((wordMatch = wordsRegex.exec(block.content)) !== null) {
-        // `wordMatch` is an array with the match and the index of the match. We need that so
-        // we can re-construct the original message.
+        // `wordMatch` is an array with the match and the index of the match. We
+        // need that so we can re-construct the original message.
 
         word = wordMatch[0];
 
@@ -90,7 +98,8 @@ function processBlock(block, userList, emojiList) {
 /**
  * Finds a channel in the word match.
  * @param {String} word Word to be searched for channels.
- * @returns {object} Object with the matched channel, index within the word, and block.
+ * @returns {object} Object with the matched channel, index within the word, and
+ *     block.
  */
 function matchChannel(word) {
     const channelMatch = channelRegex.exec(word);
@@ -103,7 +112,7 @@ function matchChannel(word) {
     return {
         index: channelMatch[1].length + channelMatch[2].length,
         match: channelMatch[3],
-        type: 'channel',
+        type: "channel",
         meta: {
             channel: channelMatch[3],
         },
@@ -113,7 +122,8 @@ function matchChannel(word) {
 /**
  * Finds an url in the word match.
  * @param {String} word Word to be searched for urls.
- * @returns {Object} Object with the index of the url match in the block content, the
+ * @returns {Object} Object with the index of the url match in the block
+ *     content, the
  * url match itself, and the new url text to be placed where the first url was.
  */
 function matchUrl(word) {
@@ -130,25 +140,25 @@ function matchUrl(word) {
         return false;
     }
 
-    // Links almost always contain an opening bracket if the last character is a closing
-    // bracket and should be part of the URL.
-    // If there isn't an opening bracket but the URL ends in a closing bracket, consider the
-    // closing bracket as punctuation outside of the URL.
-    if (url.indexOf('(') === -1 && url[url.length - 1] === ')') {
+    // Links almost always contain an opening bracket if the last character is a
+    // closing bracket and should be part of the URL. If there isn't an opening
+    // bracket but the URL ends in a closing bracket, consider the closing bracket
+    // as punctuation outside of the URL.
+    if (url.indexOf("(") === -1 && url[url.length - 1] === ")") {
         url = url.substr(0, url.length - 1);
     }
 
     // Add the http if no protocol was found
     let urlText = url;
     if (urlText.match(/^www\./i)) {
-        urlText = 'http://' + url;
+        urlText = "http://" + url;
     }
 
     return {
         index: urlMatch.index,
         match: url,
         matchText: urlText,
-        type: 'url',
+        type: "url",
         meta: {
             url: urlText,
         },
@@ -158,7 +168,8 @@ function matchUrl(word) {
 /**
  * Finds an user in the word match.
  * @param {String} word Word to be searched for users.
- * @returns {Object} Object with the index of the user match in the block content, the
+ * @returns {Object} Object with the index of the user match in the block
+ *     content, the
  * user match itself, and the user colour.
  */
 function matchUser(word, userList) {
@@ -167,7 +178,7 @@ function matchUser(word, userList) {
     }
 
     let user = null;
-    let punc = ',.!:;-+)]?¿\\/<>@';
+    let punc = ",.!:;-+)]?¿\\/<>@";
     let hasProp = Object.prototype.hasOwnProperty;
     let nickIdx = 0;
 
@@ -184,7 +195,7 @@ function matchUser(word, userList) {
     return {
         index: nickIdx,
         match: trimWord,
-        type: 'user',
+        type: "user",
         meta: {
             user: trimWord,
             colour: user.colour,
@@ -195,7 +206,8 @@ function matchUser(word, userList) {
 /**
  * Finds an emoji in the word match.
  * @param {String} word Word to be searched for emoji.
- * @returns {Object} Object with the index of the emoji match in the block content, the
+ * @returns {Object} Object with the index of the emoji match in the block
+ *     content, the
  * emoji match itself, and the emoji code.
  */
 function matchEmoji(word, emojiList) {
@@ -206,7 +218,7 @@ function matchEmoji(word, emojiList) {
     return {
         index: 0,
         match: word,
-        type: 'emoji',
+        type: "emoji",
         meta: {
             emoji: emojiList[word],
         },
@@ -215,16 +227,18 @@ function matchEmoji(word, emojiList) {
 
 /**
  * Merges the special matches into the block.
- * @param {Object} block A block that came from MessageFormatter.formatIrcMessage()
+ * @param {Object} block A block that came from
+ *     MessageFormatter.formatIrcMessage()
  * @param {Array} specialMatches Array of special matches. See definition above
- * @returns An array of blocks, where each special content will be extracted into a separate block.
+ * @returns An array of blocks, where each special content will be extracted
+ *     into a separate block.
  */
 function mergeMatches(block, specialMatches) {
     const resultBlocks = [];
     let lastProcessedIndex = 0;
 
-    // for each special content, creat a block with the text up to the match, and a block with the
-    // special content itself.
+    // for each special content, creat a block with the text up to the match, and
+    // a block with the special content itself.
     specialMatches.forEach((specialMatch, index) => {
         const beforeMatchContent = block.content.substr(
             lastProcessedIndex,

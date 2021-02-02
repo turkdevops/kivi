@@ -1,4 +1,4 @@
-'kiwi public';
+"kiwi public";
 
 const defaultLogger = makeLogger();
 export default defaultLogger;
@@ -35,7 +35,7 @@ function makeLogger(label) {
             return;
         }
 
-        this.error('Assertion failed.', ...args);
+        this.error("Assertion failed.", ...args);
     };
 
     logger.setLevel = function setLevel(newLevel) {

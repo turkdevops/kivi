@@ -1,5 +1,5 @@
-import Vue from 'vue';
-import StartupError from '@/components/StartupError';
+import StartupError from "@/components/StartupError";
+import Vue from "vue";
 
 Vue.mixin({
     computed: {
@@ -9,12 +9,12 @@ Vue.mixin({
     },
 });
 
-describe('StartupError.vue', () => {
-    it('should render correct contents', () => {
+describe("StartupError.vue", () => {
+    it("should render correct contents", () => {
         const vm = new Vue({
-            el: document.createElement('div'),
-            render: (h) => h(StartupError, { props: { error: 'some error' } }),
+            el: document.createElement("div"),
+            render: (h) => h(StartupError, { props: { error: "some error" } }),
         });
-        expect(vm.$el.querySelector('div').textContent).toEqual('some error');
+        expect(vm.$el.querySelector("div").textContent).toEqual("some error");
     });
 });

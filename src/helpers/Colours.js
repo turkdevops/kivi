@@ -1,4 +1,4 @@
-'kiwi public';
+"kiwi public";
 
 /** @module */
 
@@ -12,14 +12,19 @@
 export function hex2rgb(_hex) {
     // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
     let shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-    let hex = _hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
+    let hex = _hex.replace(
+        shorthandRegex,
+        (m, r, g, b) => r + r + g + g + b + b
+    );
 
     let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
-    } : null;
+    return result
+        ? {
+              r: parseInt(result[1], 16),
+              g: parseInt(result[2], 16),
+              b: parseInt(result[3], 16),
+          }
+        : null;
 }
 
 /**
@@ -28,9 +33,12 @@ export function hex2rgb(_hex) {
  * @return {String}     Hex color string
  */
 export function rgb2hex(rgb) {
-    return '#' + ['r', 'g', 'b']
-        .map((key) => ('0' + rgb[key].toString(16)).slice(-2))
-        .join('');
+    return (
+        "#" +
+        ["r", "g", "b"]
+            .map((key) => ("0" + rgb[key].toString(16)).slice(-2))
+            .join("")
+    );
 }
 
 /**
@@ -124,5 +132,5 @@ export function hsl2rgb(hsl) {
 }
 
 export function rgb2rgbString(rgb) {
-    return 'rgb(' + [rgb.r, rgb.g, rgb.b].join(',') + ')';
+    return "rgb(" + [rgb.r, rgb.g, rgb.b].join(",") + ")";
 }

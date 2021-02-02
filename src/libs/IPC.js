@@ -1,11 +1,11 @@
-'kiwi public';
+"kiwi public";
 
-import EventEmitter from 'eventemitter3';
+import EventEmitter from "eventemitter3";
 
 class IpcBroadcastChannel extends EventEmitter {
     constructor() {
         super();
-        this.bc = new BroadcastChannel('kiwi-ipc');
+        this.bc = new BroadcastChannel("kiwi-ipc");
         this.bc.onmessage = this.onmessage.bind(this);
     }
 
@@ -16,33 +16,35 @@ class IpcBroadcastChannel extends EventEmitter {
     }
 
     onmessage(msg) {
-        this.emit('message', msg);
+        this.emit("message", msg);
     }
 }
 
 class IpcLocalStorage extends EventEmitter {
     constructor() {
         super();
-        window.addEventListener('storage', this.onmessage.bind(this));
+        window.addEventListener("storage", this.onmessage.bind(this));
     }
 
     send(msg) {
-        localStorage.setItem('kiwi-ipc', JSON.stringify(msg));
-        localStorage.removeItem('kiwi-ipc');
+        localStorage.setItem("kiwi-ipc", JSON.stringify(msg));
+        localStorage.removeItem("kiwi-ipc");
     }
 
     onmessage(msg) {
-        if (msg.key === 'kiwi-ipc' && msg.newValue) {
+        if (msg.key === "kiwi-ipc" && msg.newValue) {
             try {
                 let parsedMsg = {
                     data: JSON.parse(msg.newValue),
                 };
-                this.emit('message', parsedMsg);
+                this.emit("message", parsedMsg);
             } catch (e) {
-                this.emit('error');
+                this.emit("error");
             }
         }
     }
 }
 
-export default (window.BroadcastChannel ? new IpcBroadcastChannel() : new IpcLocalStorage());
+export default window.BroadcastChannel
+    ? new IpcBroadcastChannel()
+    : new IpcLocalStorage();

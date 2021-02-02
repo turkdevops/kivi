@@ -533,4 +533,3 @@ msgstr "(Gracias a Adam @Rizon por el desarrollo del soporte del servidor de web
 #: Give the developer version of Kiwi IRC a try!
 msgid "rizon_dev"
 msgstr "¡Prueba la versión en desarrollo del Kiwi IRC!"
-
