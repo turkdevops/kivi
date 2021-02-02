@@ -33,7 +33,7 @@
         "strftime": "^0.10.0",
         "tinycon": "^0.6.8",
         "vue": "^2.6.11",
-        "vue-virtual-scroller": "^1.0.4",
+        "vue-virtual-scroller": "^1.0.10",
         "whatwg-fetch": "^3.0.0",
         "xhr": "^2.5.0"
     },
