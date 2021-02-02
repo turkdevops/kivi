@@ -1072,4 +1072,3 @@ msgstr "{{nick}} orain {{newnick}} da"
 #: {{nick}} changed the topic to: {{topic}}
 msgid "changed_topic_to"
 msgstr "Gaia aldatu da, gai berria {{topic}} da"
-
